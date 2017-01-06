@@ -22,7 +22,7 @@ def diag(coords_1, coords_2):
     if(coords_1[1] > coords_2[1]):
         ey = -1
     for i in range(1,abs(coords_1[0]-coords_2[0])):
-        liste += [coords_1[0]+ex*i, coords_1[1]+ey*i]
+        liste += [[coords_1[0]+ex*i, coords_1[1]+ey*i]]
     return liste
 
 class Player:
@@ -95,15 +95,19 @@ class Game(grid.Grid):
         """ moves the piece with the coordinates coordsInit to the position
         where it must be after eating the piece with the coordinates
         coordsEaten """
-        dx, dy = 1, 1
-        if coordsEaten[0] - coordsInit[0] < 0:
-            dx = -1
-        if coordsEaten[1] - coordsInit[1] < 0:
-            dy = -1
-        coordsFinal = [coordsEaten[0]+dx, coordsEaten[1]+dy]
-        self.move(coordsInit, coordsFinal)
-        self[coordsEaten] = None
-        return coordsFinal
+        if not self[coordsInit].isLady:
+            dx, dy = 1, 1
+            if coordsEaten[0] - coordsInit[0] < 0:
+                dx = -1
+            if coordsEaten[1] - coordsInit[1] < 0:
+                dy = -1
+            coordsFinal = [coordsEaten[0]+dx, coordsEaten[1]+dy]
+            self.move(coordsInit, coordsFinal)
+            self[coordsEaten] = None
+            return coordsFinal
+        for coord in coordsEaten:
+            self[coord] = None
+
 
     def availableMoves(self, coords):
         """ returns the list of coordinates the piece with the given coords
@@ -154,10 +158,42 @@ class Game(grid.Grid):
             return []
         liste = []
         x, y = coords[0], coords[1]
+        if self[coords].isLady:
+            print("Lady")
+            M1 = self.size-1-max(x, y)
+            x_ex1 = x + M1
+            y_ex1 = y + M1
+            M2 = min(x, y)
+            x_ex2 = x - M2
+            y_ex2 = y - M2
+            M3 = min(x, self.size-1-y)
+            x_ex3 = x - M3
+            y_ex3 = y + M3
+            M4 = min(self.size-1-x, y)
+            x_ex4 = x + M4
+            y_ex4 = x + M4
+            extrem_coords = [[x_ex1, y_ex1], [x_ex2, y_ex2], [x_ex3, y_ex3], [x_ex4, y_ex4]]
+            diags = []
+            for i in range(4):
+                diags += [diag(coords, extrem_coords[i])]
+            eats = []
+            for j in range(4):
+                eat = []
+                piece_to_eat = False
+                for coord in diags[j]:
+                    if self[coord] != None:
+                        if self[coord].player == self.currentPlayer.number:
+                            break
+                        piece_to_eat = True
+                        eat += [coord]
+                    else:
+                        if piece_to_eat:
+                            eats += [eat]
+            return eats
         tabExplore_1 = [[x-1, y-1], [x-1, y+1], [x+1, y-1], [x+1, y+1]]
         tabExplore_2 = [[x-2, y-2], [x-2, y+2], [x+2, y-2], [x+2, y+2]]
         for i in range(4):
-            if self[tabExplore_1[i]]!=False and self[tabExplore_2[i]]  !=False and self[tabExplore_1[i]]!=None:
+            if self[tabExplore_1[i]]!=False and self[tabExplore_2[i]] !=False and self[tabExplore_1[i]]!=None:
                 if ((self[tabExplore_1[i]]).player==3-self.currentPlayer.number and self[tabExplore_2[i]] == None):
                     liste += [tabExplore_1[i]]
         return liste
@@ -234,6 +270,15 @@ class Game(grid.Grid):
     def changePlayer(self):
         self.currentPlayer = self.players[2-self.currentPlayer.number]
 
+    def checkLady(self, nPlayer):
+        """Changes the right pieces into ladies after each turn"""
+        line = 0
+        if nPlayer == 2:
+            line = self.size-1
+        for i in range(self.size):
+            if self[i, line] != None:
+                if self[i, line].player == nPlayer and self[i, line].isLady == False:
+                    self[i, line].isLady = True
     def begin(self):
         """Starts the loop of the game."""
         while self.winner()==False:
@@ -249,6 +294,7 @@ class Game(grid.Grid):
                 move = self.askMove(nPlayer)
                 self.move(move[0], move[1])
                 self.changePlayer()
+            self.checkLady(nPlayer)
             self.disp()
 
         print("\n-------------\n", "   END", "\n------------\n")

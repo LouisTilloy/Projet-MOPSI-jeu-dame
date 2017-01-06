@@ -11,12 +11,12 @@ class NotPositive (Exception):
     def __init__(self, value):
         self.value = value
     def __str__(self):
-        return "{} est négatif !".format(self.value)   
+        return "{} est négatif !".format(self.value)
 
 class Grid:
     """ Code the grid of the checkers game with a list """
     def __init__(self, size):
-        """ Create a square grid with the given size and 
+        """ Create a square grid with the given size and
         filled with None """
         if (not isinstance(size, int)):
             raise NotInteger(size)
@@ -24,14 +24,14 @@ class Grid:
             raise NotPositive(size)
         self._size = size
         self._tab = [[None]*self.size for i in range(0,self.size)]
-    
+
     @property
     def size(self):
         """ returns the size of the grid """
         return self._size
-        
+
     def __getitem__(self, coords):
-        """ Access the value of the given coordinates 
+        """ Access the value of the given coordinates
         with the syntax: self[(x, y)] or self[[x, y]]
         returns False if the coordinates are not in the grid
         """
@@ -62,5 +62,3 @@ class Grid:
                                     , width = subSize)
             print(line)
             print("-"*(self._size*(subSize + 1) + 1))
-                
-    
