@@ -22,7 +22,7 @@ def diag(coords_1, coords_2):
     if(coords_1[1] > coords_2[1]):
         ey = -1
     for i in range(1,abs(coords_1[0]-coords_2[0])+1):
-        liste += [[coords_1[0]+ex*i, coords_1[1]+ey*i]]
+        liste += [(coords_1[0]+ex*i, coords_1[1]+ey*i)]
     return liste
 
 class Player:
@@ -101,7 +101,7 @@ class Game(grid.Grid):
                 dx = -1
             if coordsEaten[1] - coordsInit[1] < 0:
                 dy = -1
-            coordsFinal = [coordsEaten[0]+dx, coordsEaten[1]+dy]
+            coordsFinal = (coordsEaten[0]+dx, coordsEaten[1]+dy)
             self.move(coordsInit, coordsFinal)
             self[coordsEaten] = None
             return coordsFinal
@@ -131,9 +131,9 @@ class Game(grid.Grid):
             forward = 1
         if not self[coords].isLady:
             if(self[x-1,y+forward] == None):
-                listCoords.append([x-1,y+forward])
+                listCoords.append((x-1,y+forward))
             if(self[x+1,y+forward] == None):
-                listCoords.append([x+1,y+forward])
+                listCoords.append((x+1,y+forward))
 
         # If the piece is a Lady, it can go in diagonal in every
         # direction and with any range but not behind another piece.
@@ -141,7 +141,7 @@ class Game(grid.Grid):
             for [dx,dy] in [[1,1], [-1,-1], [-1,1], [1,-1]]:
                 dx0, dy0 = dx, dy
                 while self[(x+dx0,y+dy0)] == None:
-                    listCoords.append([x+dx0, y+dy0])
+                    listCoords.append((x+dx0, y+dy0))
                     dx0 += dx
                     dy0 += dy
         return listCoords
@@ -151,10 +151,10 @@ class Game(grid.Grid):
         liste = []
         for i in range(self.size):
             for j in range(self.size):
-                if self[[i, j]] != None:
-                    if self[[i, j]].player == nPlayer:
-                        if self.availableMoves([i, j]) != [] and self.availableMoves([i, j]) != None:
-                            liste += [[i, j]]
+                if self[(i, j)] != None:
+                    if self[(i, j)].player == nPlayer:
+                        if self.availableMoves((i, j)) != [] and self.availableMoves((i, j)) != None:
+                            liste += [(i, j)]
         return liste
 
     def availableEats(self, coords):
@@ -181,7 +181,7 @@ class Game(grid.Grid):
             M4 = min(self.size-1-x, y)
             x_ex4 = x + M4
             y_ex4 = y - M4
-            extrem_coords = [[x_ex1, y_ex1], [x_ex2, y_ex2], [x_ex3, y_ex3], [x_ex4, y_ex4]]
+            extrem_coords = [(x_ex1, y_ex1), (x_ex2, y_ex2), (x_ex3, y_ex3), (x_ex4, y_ex4)]
             diags = []
             for i in range(4):
                 diags += [diag(coords, extrem_coords[i])]
@@ -201,8 +201,8 @@ class Game(grid.Grid):
                             moves += [coord]
                             eats += [[eat[k] for k in range(len(eat))]]
             return [eats, moves]
-        tabExplore_1 = [[x-1, y-1], [x-1, y+1], [x+1, y-1], [x+1, y+1]]
-        tabExplore_2 = [[x-2, y-2], [x-2, y+2], [x+2, y-2], [x+2, y+2]]
+        tabExplore_1 = [(x-1, y-1), (x-1, y+1), (x+1, y-1), (x+1, y+1)]
+        tabExplore_2 = [(x-2, y-2), (x-2, y+2), (x+2, y-2), (x+2, y+2)]
         for i in range(4):
             if self[tabExplore_1[i]]!=False and self[tabExplore_2[i]] !=False and self[tabExplore_1[i]]!=None:
                 if ((self[tabExplore_1[i]]).player==3-self.currentPlayer.number and self[tabExplore_2[i]] == None):
@@ -216,11 +216,11 @@ class Game(grid.Grid):
         liste = []
         for i in range(self.size):
             for j in range(self.size):
-                if self[[i, j]] != None:
+                if self[(i, j)] != None:
                     piece = self[[i,j]]
                     if(piece.player == nPlayer):
                         if self.availableEats((i, j)) != [] and self.availableEats((i, j)) != [[], []]:
-                            liste += [[i, j]]
+                            liste += [(i, j)]
         return liste
 
     def canEat(self, nPlayer):
@@ -241,7 +241,7 @@ class Game(grid.Grid):
         while ask:
             answer = input("Piece to move:   ").split(',')
             assert(len(answer)==2)
-            coords = [int(answer[0]), int(answer[1])]
+            coords = (int(answer[0]), int(answer[1]))
             if self[coords] != None:
                 available_moves = self.availableMoves(coords)
                 if self[coords].player==nPlayer and available_moves != [] and available_moves != None:
@@ -252,7 +252,7 @@ class Game(grid.Grid):
         while ask:
             answer = input("Move to:   ").split(',')
             assert(len(answer)==2)
-            final_coords = [int(answer[0]), int(answer[1])]
+            final_coords = (int(answer[0]), int(answer[1]))
             if final_coords in available_moves:
                 ask = False
         return (coords, final_coords)
@@ -265,7 +265,7 @@ class Game(grid.Grid):
         while ask:
             answer = input("Piece to move:   ").split(',')
             assert(len(answer)==2)
-            coords = [int(answer[0]), int(answer[1])]
+            coords = (int(answer[0]), int(answer[1]))
             if coords in eaters:
                 ask = False
         moves = None
@@ -279,7 +279,7 @@ class Game(grid.Grid):
             while ask:
                 answer = input("Place where you want to move:  ").split(',')
                 assert(len(answer)==2)
-                coords_move = [int(answer[0]), int(answer[1])]
+                coords_move = (int(answer[0]), int(answer[1]))
                 if coords_move in moves:
                     ask = False
                     for i in range(len(moves)):
@@ -295,7 +295,7 @@ class Game(grid.Grid):
             while ask:
                 answer = input("Piece to eat:   ").split(',')
                 assert(len(answer)==2)
-                coords_eaten = [int(answer[0]), int(answer[1])]
+                coords_eaten = (int(answer[0]), int(answer[1]))
                 if coords_eaten in eats:
                     ask = False
             return [coords, coords_eaten]
