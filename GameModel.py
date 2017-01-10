@@ -22,7 +22,7 @@ def diag(coords_1, coords_2):
     if(coords_1[1] > coords_2[1]):
         ey = -1
     for i in range(1,abs(coords_1[0]-coords_2[0])):
-        liste += [[coords_1[0]+ex*i, coords_1[1]+ey*i]]
+        liste += [(coords_1[0]+ex*i, coords_1[1]+ey*i)]
     return liste
 
 class Player:
@@ -131,9 +131,9 @@ class Game(grid.Grid):
             forward = 1
         if not self[coords].isLady:
             if(self[x-1,y+forward] == None):
-                listCoords.append([x-1,y+forward])
+                listCoords.append((x-1,y+forward))
             if(self[x+1,y+forward] == None):
-                listCoords.append([x+1,y+forward])
+                listCoords.append((x+1,y+forward))
 
         # If the piece is a Lady, it can go in diagonal in every
         # direction and with any range but not behind another piece.
@@ -141,7 +141,7 @@ class Game(grid.Grid):
             for [dx,dy] in [[1,1], [-1,-1], [-1,1], [1,-1]]:
                 dx0, dy0 = dx, dy
                 while self[(x+dx0,y+dy0)] == None:
-                    listCoords.append([x+dx0, y+dy0])
+                    listCoords.append((x+dx0, y+dy0))
                     dx0 += dx
                     dy0 += dy
         return listCoords
@@ -158,6 +158,7 @@ class Game(grid.Grid):
             return []
         liste = []
         x, y = coords[0], coords[1]
+
         if self[coords].isLady:
             print("Lady")
             M1 = self.size-1-max(x, y)
@@ -172,7 +173,7 @@ class Game(grid.Grid):
             M4 = min(self.size-1-x, y)
             x_ex4 = x + M4
             y_ex4 = x + M4
-            extrem_coords = [[x_ex1, y_ex1], [x_ex2, y_ex2], [x_ex3, y_ex3], [x_ex4, y_ex4]]
+            extrem_coords = [(x_ex1, y_ex1), (x_ex2, y_ex2), (x_ex3, y_ex3), (x_ex4, y_ex4)]
             diags = []
             for i in range(4):
                 diags += [diag(coords, extrem_coords[i])]
@@ -190,8 +191,9 @@ class Game(grid.Grid):
                         if piece_to_eat:
                             eats += [eat]
             return eats
-        tabExplore_1 = [[x-1, y-1], [x-1, y+1], [x+1, y-1], [x+1, y+1]]
-        tabExplore_2 = [[x-2, y-2], [x-2, y+2], [x+2, y-2], [x+2, y+2]]
+            
+        tabExplore_1 = [(x-1, y-1), (x-1, y+1), (x+1, y-1), (x+1, y+1)]
+        tabExplore_2 = [(x-2, y-2), (x-2, y+2), (x+2, y-2), (x+2, y+2)]
         for i in range(4):
             if self[tabExplore_1[i]]!=False and self[tabExplore_2[i]] !=False and self[tabExplore_1[i]]!=None:
                 if ((self[tabExplore_1[i]]).player==3-self.currentPlayer.number and self[tabExplore_2[i]] == None):
@@ -209,7 +211,21 @@ class Game(grid.Grid):
                     piece = self[[i,j]]
                     if(piece.player == nPlayer):
                         if self.availableEats((i, j)) != []:
-                            liste += [[i, j]]
+                            liste += [(i, j)]
+        return liste
+        
+    def allAvailableMovers(self, nPlayer):
+        """ returns the list of all the coordinates where there is a 
+        piece belonging to the player number nPlayer that can eat
+        another piece """
+        liste = []
+        for i in range(self.size):
+            for j in range(self.size):
+                if self[[i, j]] != None:
+                    piece = self[(i,j)]
+                    if(piece.player == nPlayer):
+                        if self.availableMoves((i, j)) != []:
+                            liste += [(i, j)]
         return liste
 
     def canEat(self, nPlayer):
