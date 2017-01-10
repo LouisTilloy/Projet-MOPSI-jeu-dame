@@ -21,8 +21,8 @@ def diag(coords_1, coords_2):
         ex = -1
     if(coords_1[1] > coords_2[1]):
         ey = -1
-    for i in range(1,abs(coords_1[0]-coords_2[0])):
-        liste += [(coords_1[0]+ex*i, coords_1[1]+ey*i)]
+    for i in range(1,abs(coords_1[0]-coords_2[0])+1):
+        liste += [[coords_1[0]+ex*i, coords_1[1]+ey*i]]
     return liste
 
 class Player:
@@ -131,9 +131,9 @@ class Game(grid.Grid):
             forward = 1
         if not self[coords].isLady:
             if(self[x-1,y+forward] == None):
-                listCoords.append((x-1,y+forward))
+                listCoords.append([x-1,y+forward])
             if(self[x+1,y+forward] == None):
-                listCoords.append((x+1,y+forward))
+                listCoords.append([x+1,y+forward])
 
         # If the piece is a Lady, it can go in diagonal in every
         # direction and with any range but not behind another piece.
@@ -141,11 +141,21 @@ class Game(grid.Grid):
             for [dx,dy] in [[1,1], [-1,-1], [-1,1], [1,-1]]:
                 dx0, dy0 = dx, dy
                 while self[(x+dx0,y+dy0)] == None:
-                    listCoords.append((x+dx0, y+dy0))
+                    listCoords.append([x+dx0, y+dy0])
                     dx0 += dx
                     dy0 += dy
         return listCoords
 
+    def movable(self, nPlayer):
+        """returns the coords of the pieces that can move for the player nPlayer"""
+        liste = []
+        for i in range(self.size):
+            for j in range(self.size):
+                if self[[i, j]] != None:
+                    if self[[i, j]].player == nPlayer:
+                        if self.availableMoves([i, j]) != [] and self.availableMoves([i, j]) != None:
+                            liste += [[i, j]]
+        return liste
 
     def availableEats(self, coords):
         """ returns the list of coordinates that the piece with the given coords
@@ -158,9 +168,7 @@ class Game(grid.Grid):
             return []
         liste = []
         x, y = coords[0], coords[1]
-
         if self[coords].isLady:
-            print("Lady")
             M1 = self.size-1-max(x, y)
             x_ex1 = x + M1
             y_ex1 = y + M1
@@ -172,28 +180,29 @@ class Game(grid.Grid):
             y_ex3 = y + M3
             M4 = min(self.size-1-x, y)
             x_ex4 = x + M4
-            y_ex4 = x + M4
-            extrem_coords = [(x_ex1, y_ex1), (x_ex2, y_ex2), (x_ex3, y_ex3), (x_ex4, y_ex4)]
+            y_ex4 = y - M4
+            extrem_coords = [[x_ex1, y_ex1], [x_ex2, y_ex2], [x_ex3, y_ex3], [x_ex4, y_ex4]]
             diags = []
             for i in range(4):
                 diags += [diag(coords, extrem_coords[i])]
             eats = []
+            moves = []
+            eat = []
             for j in range(4):
-                eat = []
-                piece_to_eat = False
+                new_eat = False
                 for coord in diags[j]:
                     if self[coord] != None:
                         if self[coord].player == self.currentPlayer.number:
                             break
-                        piece_to_eat = True
+                        new_eat = True
                         eat += [coord]
                     else:
-                        if piece_to_eat:
-                            eats += [eat]
-            return eats
-            
-        tabExplore_1 = [(x-1, y-1), (x-1, y+1), (x+1, y-1), (x+1, y+1)]
-        tabExplore_2 = [(x-2, y-2), (x-2, y+2), (x+2, y-2), (x+2, y+2)]
+                        if new_eat:
+                            moves += [coord]
+                            eats += [[eat[k] for k in range(len(eat))]]
+            return [eats, moves]
+        tabExplore_1 = [[x-1, y-1], [x-1, y+1], [x+1, y-1], [x+1, y+1]]
+        tabExplore_2 = [[x-2, y-2], [x-2, y+2], [x+2, y-2], [x+2, y+2]]
         for i in range(4):
             if self[tabExplore_1[i]]!=False and self[tabExplore_2[i]] !=False and self[tabExplore_1[i]]!=None:
                 if ((self[tabExplore_1[i]]).player==3-self.currentPlayer.number and self[tabExplore_2[i]] == None):
@@ -210,22 +219,8 @@ class Game(grid.Grid):
                 if self[[i, j]] != None:
                     piece = self[[i,j]]
                     if(piece.player == nPlayer):
-                        if self.availableEats((i, j)) != []:
-                            liste += [(i, j)]
-        return liste
-        
-    def allAvailableMovers(self, nPlayer):
-        """ returns the list of all the coordinates where there is a 
-        piece belonging to the player number nPlayer that can eat
-        another piece """
-        liste = []
-        for i in range(self.size):
-            for j in range(self.size):
-                if self[[i, j]] != None:
-                    piece = self[(i,j)]
-                    if(piece.player == nPlayer):
-                        if self.availableMoves((i, j)) != []:
-                            liste += [(i, j)]
+                        if self.availableEats((i, j)) != [] and self.availableEats((i, j)) != [[], []]:
+                            liste += [[i, j]]
         return liste
 
     def canEat(self, nPlayer):
@@ -240,7 +235,9 @@ class Game(grid.Grid):
         and returns the coordinates"""
         ask = True
         coords = None
+        movable = self.movable(nPlayer)
         available_moves = None
+        print("Pieces you can move:  ", movable)
         while ask:
             answer = input("Piece to move:   ").split(',')
             assert(len(answer)==2)
@@ -271,17 +268,37 @@ class Game(grid.Grid):
             coords = [int(answer[0]), int(answer[1])]
             if coords in eaters:
                 ask = False
-        eats = self.availableEats(coords)
-        print("Pieces you can eat:  ", eats)
-        ask = True
-        coords_eaten = None
-        while ask:
-            answer = input("Piece to eat:   ").split(',')
-            assert(len(answer)==2)
-            coords_eaten = [int(answer[0]), int(answer[1])]
-            if coords_eaten in eats:
-                ask = False
-        return [coords, coords_eaten]
+        moves = None
+        if self[coords].isLady:
+            eats, moves = self.availableEats(coords)
+            print(eats)
+            print("Places where you can move while eating:  ", moves)
+            ask = True
+            coords_eaten = None
+            coords_move = None
+            while ask:
+                answer = input("Place where you want to move:  ").split(',')
+                assert(len(answer)==2)
+                coords_move = [int(answer[0]), int(answer[1])]
+                if coords_move in moves:
+                    ask = False
+                    for i in range(len(moves)):
+                        if moves[i] == coords_move:
+                            coords_eaten = eats[i]
+            return [coords, coords_eaten, coords_move]
+
+        else:
+            eats = self.availableEats(coords)
+            print("Pieces you can eat:  ", eats)
+            ask = True
+            coords_eaten = None
+            while ask:
+                answer = input("Piece to eat:   ").split(',')
+                assert(len(answer)==2)
+                coords_eaten = [int(answer[0]), int(answer[1])]
+                if coords_eaten in eats:
+                    ask = False
+            return [coords, coords_eaten]
 
     def changePlayer(self):
         self.currentPlayer = self.players[2-self.currentPlayer.number]
@@ -303,8 +320,14 @@ class Game(grid.Grid):
             if self.canEat(nPlayer):
                 print("eating...")
                 eat = self.askEat(nPlayer)
-                final_coords = self.eat(eat[0], eat[1])
-                if self.availableEats(final_coords) == []:
+                final_coords = None
+                if self[eat[0]].isLady:
+                    self.eat(eat[0], eat[1])
+                    self.move(eat[0], eat[2])
+                    final_coords = eat[2]
+                else:
+                    final_coords = self.eat(eat[0], eat[1])
+                if self.availableEats(final_coords) == [] or self.availableEats(final_coords) == [[], []]:
                     self.changePlayer()
             else:
                 move = self.askMove(nPlayer)
