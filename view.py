@@ -108,6 +108,7 @@ class Window(QtGui.QWidget):
                 grid.addWidget(button, y, x)
         
         self.setLayout(grid)
+        self.graphicSelection(1)
         self.show()
 
     def buttonClicked(self):
