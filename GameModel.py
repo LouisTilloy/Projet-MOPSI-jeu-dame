@@ -73,7 +73,6 @@ class Game(grid.Grid):
                 self[(x*2 + (y+1)%2, y)] = copy.deepcopy(p2)
                 self[(x*2 + y%2, size-1-y)] = copy.deepcopy(p1)
                 self._nPieces += 1
-
         self.player1 = Player(name1, self._nPieces, 1)
         self.player2 = Player(name2, self._nPieces, 2)
         self.players = [self.player1, self.player2]
@@ -118,12 +117,14 @@ class Game(grid.Grid):
         Returns the eaten coordinate. """
         # WARNING : tests must be added in the method so that coordsInit and
         # coordsFinal are compatibles.
+        eaten_player = self.players[3-self.currentPlayer.number]
         self.move(coordsInit, coordsFinal)
         for coords in diag(coordsFinal, coordsInit): # from coordsFinal excluded
-                                                    # to coordsInit included 
+                                                    # to coordsInit included
                                                     # (which is already a None)
             if self[coords] != None:
                 self[coords] = None
+                eaten_player.nPieces -= 1
                 return coords
 
     def availableMoves(self, coords):
@@ -180,11 +181,11 @@ class Game(grid.Grid):
         returns None if there is no piece with the given coordinates
         """
         if self[coords]==None:
-            return []
+            return [[],[]]
         if self[coords].player != self.currentPlayer.number:
-            return []
-        
-        
+            return [[],[]]
+
+
         x, y = coords[0], coords[1]
         # If the piece is a Lady
         if self[coords].isLady:
@@ -215,7 +216,7 @@ class Game(grid.Grid):
                         if self[coord] != None:
                             break; # you can't go behind or on another piece without eating it
                         else:
-                            tempMoves += [coord] 
+                            tempMoves += [coord]
                     else:
                         if self[coord] != None:
                             if self[coord].player != self.currentPlayer.number:
@@ -231,7 +232,7 @@ class Game(grid.Grid):
                                         # correspond to the coordinates in the
                                         # list moves[i]
             return [eats, moves]
-        
+
         # If the piece is a normal one
         eats = []
         moves = []
@@ -260,15 +261,15 @@ class Game(grid.Grid):
                         if self.availableEats((i, j)) != [[], []]:
                             liste += [(i, j)]
         return liste
-        
+
     def playables(self, nPlayer):
-        """ Returns the list of all the coordinates of the pieces the 
+        """ Returns the list of all the coordinates of the pieces the
         player number nPlayer can use """
         if self.canEat(nPlayer):
             return self.allAvailableEaters(nPlayer)
         else:
             return self.movable(nPlayer)
-    
+
     def canEat(self, nPlayer):
         """ returns a boolean that says if a player can eat during his
         turn
