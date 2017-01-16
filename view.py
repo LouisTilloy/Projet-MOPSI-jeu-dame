@@ -14,9 +14,11 @@ class Square(QtGui.QPushButton):
         self.initUI(x, y)
         
     def initUI(self, x, y):
+        """ Constructor """
         if (x+y)%2==1:
             self.setStyleSheet("QPushButton {background-color: black}"
-                               "QPushButton {border: 0px}")
+                               "QPushButton {border: 0px}") # So it doesn't look
+                                                            # like a button
         else:
             self.setStyleSheet("QPushButton {background-color: white}"
                                "QPushButton {border: 0px}")
@@ -47,7 +49,13 @@ class Square(QtGui.QPushButton):
         pixmap = QtGui.QPixmap("")
         icon = QtGui.QIcon(pixmap)
         self.setIcon(icon)
-        
+    
+    def availableSelect(self):
+        """ Changes the color of the square when it is part of the squares
+        that can be selected """
+        self.setStyleSheet("QPushButton {background-color: rgb(20,100,20)}"
+                               "QPushButton {border: 0px}")
+    
     def select(self):
         """ Changes the color of the square when it is selected """
         self.setStyleSheet("QPushButton {background-color: blue}"
@@ -59,26 +67,35 @@ class Square(QtGui.QPushButton):
         self.setStyleSheet("QPushButton {background-color: black}"
                                "QPushButton {border: 0px}")
         
+    def gotoSelect(self):
+        """ Changes the color of the square when it is part of potential
+        destinations """
+        pass
+        
 class Window(QtGui.QWidget):
-    """ Fenêtre principale danslaquelle on va placer la grille de jeu  """
+    """ Main window in which we are going to put the game grid """
     def __init__(self, game):
-        """ Constructeur, fait appel au constructeur de QMainWindow """
+        """ Constructeur, call the constructor of QWidget """
         super(Window, self).__init__()
         
         self.initUI(game)
         
     def initUI(self, game):
-        self.checkers = game
+        """ Constructor, initializes the grid with the different pieces,
+        """
+        self.checkers = game # variable containing the game
         self.selectedPosition = None # position of the selected square or None
                                    # if there is no selected square
         self.selectedButton = None # button selected or None is there is no 
                                    # button selected
         self.buttonList = GameModel.grid.Grid(game.size)
-        self.replay = False
+        self.replay = False # tells if a player is playing again to eat another
+                            # piece
         
         grid = QtGui.QGridLayout()
         grid.setSpacing(0)
         
+        # Creation of the buttons
         for x in range(0 ,self.checkers.size):
             for y in range(0, self.checkers.size):
                 button = Square(x, y)
@@ -86,7 +103,7 @@ class Window(QtGui.QWidget):
                 if square0 != None:
                     button.addPiece(square0.player, square0.isLady)
                 button.setObjectName(str((x, y)))
-                button.clicked.connect(self.buttonClicked)
+                button.clicked.connect(self.buttonClicked,)
                 self.buttonList[(x,y)] = button
                 grid.addWidget(button, y, x)
         
@@ -94,61 +111,106 @@ class Window(QtGui.QWidget):
         self.show()
 
     def buttonClicked(self):
+        """ Called whenever a button is pressed,
+        the method does one turn of the game """
         print("A button has been pressed !")
         sender = self.sender()
-        oldPosition = self.selectedPosition
+        oldPosition = self.selectedPosition # refers to the position of the selected
+                                            # piece
         position = (int(sender.objectName()[1]), int(sender.objectName()[4]))
         nPlayer = self.checkers.currentPlayer.number
         
         # If a square has already been selected
         print(self.selectedPosition)
         if oldPosition != None:
+            #self.resetGraphicSelections()
             isLady = self.checkers[oldPosition].isLady
             # If you can eat, you have to
             if self.checkers.canEat(nPlayer):
-                if position in self.checkers.availableEats(oldPosition):
-                    print(1)
-                    finalPosition = self.checkers.eat(oldPosition, position)
+                listMoves = self.checkers.availableEats(oldPosition)[1]
+                allMoves = []
+                for sublist in listMoves:
+                    allMoves += sublist
+                for move in allMoves:
+                    self.buttonList[move].availableSelect()
+                if position in allMoves:
+                    eatenCoords = self.checkers.eat(oldPosition, position)
                     self.selectedButton.removePiece()
-                    self.buttonList[position].removePiece()
-                    self.buttonList[finalPosition].addPiece(nPlayer, isLady)
-                    if self.checkers.availableEats(finalPosition) != []:
+                    self.buttonList[eatenCoords].removePiece()
+                    self.buttonList[position].addPiece(nPlayer, isLady)
+                    print(self.checkers.availableEats(position))
+                    print(self.checkers[position])
+                    print(position)
+                    if self.checkers.availableEats(position)[0] != []:
                         self.selectedButton.unselect()
-                        self.selectedButton = self.buttonList[finalPosition]
+                        self.selectedButton = self.buttonList[position]
                         self.selectedButton.select()
-                        self.selectedPosition = copy.deepcopy(finalPosition)
+                        self.selectedPosition = copy.deepcopy(position)
                         self.replay = True
                     else:
                         self.checkers.changePlayer()
                         self.replay = False
+                        self.resetGraphicSelections()
             # If you can't you have to move a piece
             else:
+                allMoves = self.checkers.availableMoves(oldPosition)
+                for move in allMoves:
+                    self.buttonList[move].availableSelect()
                 print(self.checkers.availableMoves(oldPosition))
-                if position in self.checkers.availableMoves(oldPosition):
+                if position in allMoves:
                     print(2)
                     self.checkers.move(oldPosition, position)
                     self.selectedButton.removePiece()
                     self.buttonList[position].addPiece(nPlayer, isLady)
                     self.checkers.changePlayer()
-            
+                    self.resetGraphicSelections()
+            # If the selected square cannot be reached with the piece, the player
+            # has to start again the selection
             if (not self.replay):
-                self.selectedButton.unselect()
+                self.checkers.checkLady(self.checkers.currentPlayer.number)
                 self.selectedButton = None
                 self.selectedPosition = None
+                self.resetGraphicSelections()
+                self.graphicCheckLady(self.checkers.currentPlayer.number)
+                self.graphicSelection(self.checkers.currentPlayer.number)
             
         # If no square has been selected
-        else:
-            if self.checkers[position] != None and \
-                self.checkers[position].player == nPlayer and \
-                (self.checkers.availableMoves(position) != [] or self.checkers.availableEats(position) != []):
-                sender.select()
-                self.selectedPosition = copy.deepcopy(position)
-                self.selectedButton = sender
-                if self.checkers.canEat(nPlayer):
-                    print("yolo")
+        elif position in self.checkers.playables(nPlayer):
+            self.selectedPosition = copy.deepcopy(position)
+            self.selectedButton = sender
+                
+        if self.selectedButton != None:
+            self.resetGraphicSelections()
+            self.selectedButton.select()
+            listEatMoves = self.checkers.availableEats(self.selectedPosition)[1]
+            if listEatMoves:
+                for listMoves in listEatMoves:
+                    for move in listMoves:
+                        self.buttonList[move].availableSelect()
+            else:
+                for move in self.checkers.availableMoves(self.selectedPosition):
+                    self.buttonList[move].availableSelect()
         return None
-        
     
+    def resetGraphicSelections(self):
+        for x in range(0, self.checkers.size):
+            for y in range(0, self.checkers.size):
+                if (x+y)%2 == 1:
+                    self.buttonList[(x,y)].unselect()
+    
+    def graphicSelection(self, nPlayer):
+        for position in self.checkers.playables(nPlayer):
+            self.buttonList[position].availableSelect()
+            
+    def graphicCheckLady(self, nPlayer):
+        y = 0
+        if nPlayer == 2:
+            y = self.checkers.size-1
+        for x in range(0, self.checkers.size):
+            if self.checkers[(x,y)] != None and \
+                             self.checkers[(x,y)].player == nPlayer and \
+                                           self.checkers[(x,y)].isLady:
+                self.buttonList[(x,y)].addPiece(nPlayer, True)
 
 def main():
     app = QtGui.QApplication(sys.argv)
