@@ -47,7 +47,7 @@ public:
   }
 };
 
-
+vector<Coord> diag_large(Coord init, Coord end);
 vector<Coord> diag(Coord init, Coord end);
 
 
@@ -114,6 +114,17 @@ public:
     move_seq.clear();
     eat_seq.clear();
   }
+  int getPlayer(int i, int j){
+    if(get(i, j)==1 || get(i, j)==3){
+        return 1;
+    }else if(get(i, j)==2 || get(i, j)==4){
+        return 2;
+    }
+    return 0;
+  }
+  int getPlayer(Coord C){
+    return getPlayer(C.x, C.y);
+  }
   void vect_copy(vector<int> V){
       for(int i=0;i<V.size();i++){
           tab[i] = V[i];
@@ -130,14 +141,26 @@ public:
   int operator()(Coord C){
     return get(C.x, C.y);
   }
+  int operator[](Coord C){
+      return get(C.x, C.y);
+  }
+
   int operator()(int i, int j){
     return get(i, j);
   }
   void set(int i, int j, int s){
-    tab[i*size+j] = s;
+    if(i>=0 && j>=0 && i<size && j<size){
+        tab[i*size+j] = s;
+    }
   }
   int get(int i, int j){
+    if(i<0 || j<0 || i>=size || j>=size){
+        return 5;
+    }
     return tab[i*size+j];
+  }
+  int get(Coord C){
+    return get(C.x, C.y);
   }
   void copy(){
     vector<int> tab_grid = getGrid();
@@ -167,7 +190,7 @@ public:
       return res;
   }
   bool isEnded(){
-      return (nPieces[0]==0 || nPieces[1]==0);
+      return (nPieces[0]<=0 || nPieces[1]<=0);
   }
   int points(int player){
       return nPieces[player-1] - nPieces[2-player];
@@ -191,6 +214,7 @@ public:
   }
   void play(int player, Move move){
       vector<Coord> eats = eated(player, move);
+      nPieces[2-player] -= eats.size();
       for(int i=0;i<eats.size();i++){
           set(eats[i].x, eats[i].y, 0);
       }
@@ -205,13 +229,24 @@ public:
       eat_seq.pop_back();
       Move move = move_seq.back();
       move_seq.pop_back();
+      int eated_player;
       for(int i=0;i<eats.size();i++){
           set(eats[i].x, eats[i].y, eats[i].getType());
+          eated_player = eats[i].getType();
+          nPieces[eated_player-1]++;
       }
       int a = get(move.end.x, move.end.y);
       set(move.end.x, move.end.y, 0);
       set(move.init.x, move.init.y, a);
   }
+  vector<Coord> availableMoves(Coord start);
+  vector<Coord> movables(int player);
+  vector<Coord> availableEats(Coord start);
+  vector<Coord> availableEaters(int player);
+  bool canEat(int player);
+  vector<Coord> playables(int player);
+  vector<Coord> availablePlays(Coord start);
+  Move minMax(int player, int depth);
 };
 
 string action(string actionName);
@@ -225,5 +260,6 @@ bool canEat(int player, Grid G);
 vector<Coord> getPlayables(int player, Grid G);
 int play(int player, Move move, Grid G);
 vector<Coord> possiblePlays(int player, Coord start, Grid G);
-
+void send(Move move);
+void send(vector<Coord> eats);
 

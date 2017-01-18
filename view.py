@@ -1,8 +1,13 @@
 import sys
 from PyQt4 import QtGui, QtCore
 import copy
+import time
 
-import GameModel 
+import GameModel
+
+
+DEPTH = 3
+
 
 class Square(QtGui.QPushButton):
     """ Button to represent the squares of the game """
@@ -10,9 +15,9 @@ class Square(QtGui.QPushButton):
         """  Creates a square of the grid, whith the color coresponding to its
         position """
         super(Square, self).__init__()
-        
+
         self.initUI(x, y)
-        
+
     def initUI(self, x, y):
         """ Constructor """
         if (x+y)%2==1:
@@ -23,9 +28,9 @@ class Square(QtGui.QPushButton):
             self.setStyleSheet("QPushButton {background-color: white}"
                                "QPushButton {border: 0px}")
         self.setFixedSize(80,80)
-        
+
     def addPiece(self, nPlayer, isLady):
-        """ Add a piece of the given player (a Lady if isLady = True) on the 
+        """ Add a piece of the given player (a Lady if isLady = True) on the
         square """
         iconName = ""
         if nPlayer == 1:
@@ -38,63 +43,63 @@ class Square(QtGui.QPushButton):
                 iconName = "BlackLady.png"
             else:
                 iconName = "BlackPiece.png"
-        
+
         pixmap = QtGui.QPixmap(iconName)
         icon = QtGui.QIcon(pixmap)
         self.setIcon(icon)
         self.setIconSize(pixmap.rect().size())
-        
+
     def removePiece(self):
         """ Remove the piece of the square """
         pixmap = QtGui.QPixmap("")
         icon = QtGui.QIcon(pixmap)
         self.setIcon(icon)
-    
+
     def availableSelect(self):
         """ Changes the color of the square when it is part of the squares
         that can be selected """
         self.setStyleSheet("QPushButton {background-color: rgb(20,100,20)}"
                                "QPushButton {border: 0px}")
-    
+
     def select(self):
         """ Changes the color of the square when it is selected """
         self.setStyleSheet("QPushButton {background-color: blue}"
                                "QPushButton {border: 0px}")
-        
+
     def unselect(self):
         """ Changes the color of the square back to its original one """
         # A white square will never be selected
         self.setStyleSheet("QPushButton {background-color: black}"
                                "QPushButton {border: 0px}")
-        
+
     def gotoSelect(self):
         """ Changes the color of the square when it is part of potential
         destinations """
         pass
-        
+
 class Window(QtGui.QWidget):
     """ Main window in which we are going to put the game grid """
     def __init__(self, game):
         """ Constructeur, call the constructor of QWidget """
         super(Window, self).__init__()
-        
+
         self.initUI(game)
-        
+
     def initUI(self, game):
         """ Constructor, initializes the grid with the different pieces,
         """
         self.checkers = game # variable containing the game
         self.selectedPosition = None # position of the selected square or None
                                    # if there is no selected square
-        self.selectedButton = None # button selected or None is there is no 
+        self.selectedButton = None # button selected or None is there is no
                                    # button selected
         self.buttonList = GameModel.grid.Grid(game.size)
         self.replay = False # tells if a player is playing again to eat another
                             # piece
-        
+
         grid = QtGui.QGridLayout()
         grid.setSpacing(0)
-        
+
         # Creation of the buttons
         for x in range(0 ,self.checkers.size):
             for y in range(0, self.checkers.size):
@@ -106,10 +111,10 @@ class Window(QtGui.QWidget):
                 button.clicked.connect(self.buttonClicked,)
                 self.buttonList[(x,y)] = button
                 grid.addWidget(button, y, x)
-        
+
         self.setLayout(grid)
-        self.graphicSelection(1)
         self.show()
+
 
     def buttonClicked(self):
         """ Called whenever a button is pressed,
@@ -120,7 +125,7 @@ class Window(QtGui.QWidget):
                                             # piece
         position = (int(sender.objectName()[1]), int(sender.objectName()[4]))
         nPlayer = self.checkers.currentPlayer.number
-        
+
         # If a square has already been selected
         print(self.selectedPosition)
         if oldPosition != None:
@@ -174,12 +179,12 @@ class Window(QtGui.QWidget):
                 self.resetGraphicSelections()
                 self.graphicCheckLady(self.checkers.currentPlayer.number)
                 self.graphicSelection(self.checkers.currentPlayer.number)
-            
+
         # If no square has been selected
         elif position in self.checkers.playables(nPlayer):
             self.selectedPosition = copy.deepcopy(position)
             self.selectedButton = sender
-                
+
         if self.selectedButton != None:
             self.resetGraphicSelections()
             self.selectedButton.select()
@@ -191,26 +196,40 @@ class Window(QtGui.QWidget):
             else:
                 for move in self.checkers.availableMoves(self.selectedPosition):
                     self.buttonList[move].availableSelect()
+        self.graphicCheckLady(1)
+        while self.checkers.currentPlayer.number == 2:
+            self.resetGraphicSelections()
+            move, eats = self.checkers.IA_turn(DEPTH)
+            isLady = self.checkers[move[1]].isLady
+            print(move[0], move[1])
+            self.buttonList[move[0]].removePiece()
+            self.buttonList[move[1]].addPiece(2, isLady)
+            for eat in eats:
+                self.buttonList[eat].removePiece()
+            if not (self.checkers.canEat(2) and len(eats)>0):
+                self.checkers.currentPlayer = self.checkers.player1
+        self.graphicCheckLady(2)
+        self.graphicSelection(1)
         return None
-    
+
     def resetGraphicSelections(self):
         for x in range(0, self.checkers.size):
             for y in range(0, self.checkers.size):
                 if (x+y)%2 == 1:
                     self.buttonList[(x,y)].unselect()
-    
+
     def graphicSelection(self, nPlayer):
         for position in self.checkers.playables(nPlayer):
             self.buttonList[position].availableSelect()
-            
+
     def graphicCheckLady(self, nPlayer):
         y = 0
         if nPlayer == 2:
             y = self.checkers.size-1
         for x in range(0, self.checkers.size):
-            if self.checkers[(x,y)] != None and \
-                             self.checkers[(x,y)].player == nPlayer and \
-                                           self.checkers[(x,y)].isLady:
+            if self.checkers[(x,y)] != None and self.checkers[(x,y)].player == nPlayer:
+                """ and self.checkers[(x,y)].isLady:"""
+                self.checkers[(x, y)].isLady=True
                 self.buttonList[(x,y)].addPiece(nPlayer, True)
 
 def main():
@@ -218,8 +237,6 @@ def main():
     game = GameModel.Game()
     fenetre = Window(game)
     sys.exit(app.exec_())
-    
+
 if __name__ == '__main__':
     main()
-
-                

@@ -17,12 +17,39 @@ vector<Coord> diag(Coord init, Coord end){
     if(init.y > end.y){
         dy = -1;
     }
-    for(int i=1;i<abs(init.x-end.y);i++){
+    for(int i=1;i<abs(init.x-end.x);i++){
         Coord C(init.x+i*dx, init.y+i*dy);
         diagonale.push_back(C);
     }
     return diagonale;
 }
+
+
+vector<Coord> diag_large(Coord init, Coord end){
+    vector<Coord> diagonale;
+    diagonale.clear();
+    if(init.x<0 || init.y<0 || end.x<0 || end.y<0){
+        return diagonale;
+    }
+    if(abs(init.x-end.x) != abs(init.y-end.y)){
+        return diagonale;
+    }
+    int dx = 1;
+    int dy = 1;
+    if(init.x > end.x){
+        dx = -1;
+    }
+    if(init.y > end.y){
+        dy = -1;
+    }
+    for(int i=1;i<abs(init.x-end.x)+1;i++){
+        Coord C(init.x+i*dx, init.y+i*dy);
+        diagonale.push_back(C);
+    }
+    return diagonale;
+}
+
+
 
 
 bool canEat(int player, Grid G){
@@ -64,6 +91,8 @@ Move min_max(Grid& G, int player, int depth){
     }
     return best_move;
 }
+
+
 
 
 vector<Coord> possiblePlays(int player, Coord start, Grid G){
@@ -283,7 +312,205 @@ string action(string actionName){
 }
 
 
+//Methodes
 
+vector<Coord> Grid::availableMoves(Coord start){
+    vector<Coord> res;
+    res.clear();
+    int value = (*this)[start];
+    if(value == 0){
+        return res;
+    }
+    int x = start.x;
+    int y = start.y;
+    int forward = 1;
+    if(value%2==1){
+        forward = -1;
+    }
+    if(value<3){
+        if(get(x-1, y+forward)==0){
+            Coord C1(x-1, y+forward);
+            res.push_back(C1);
+        }
+        if(get(x+1, y+forward)==0){
+            Coord C2(x+1, y+forward);
+            res.push_back(C2);
+        }
+    }else{
+        for(int i=-1;i<2;i+=2){
+            for(int j=-1;j<2;j+=2){
+                int p=1;
+                while(get(x+p*i, y+p*j)==0){
+                    Coord C(x+p*i, y+p*j);
+                    res.push_back(C);
+                    p++;
+                }
+            }
+        }
+    }
+    return res;
+}
+
+vector<Coord> Grid::movables(int player){
+    vector<Coord> res;
+    res.clear();
+    for(int i=0;i<size;i++){
+        for(int j=0;j<size;j++){
+            if(getPlayer(i,j)==player){
+                Coord C(i, j);
+                if(availableMoves(C).size()>0){
+                    res.push_back(C);
+                }
+            }
+        }
+    }
+    return res;
+}
+
+vector<Coord> Grid::availableEats(Coord start){
+    vector<Coord> moves;
+    moves.clear();
+    int value = (*this)[start];
+    int x = start.x;
+    int y = start.y;
+    if(value==3 || value==4){
+        int M1 = size-1-max(x, y);
+        int x_ex1 = x + M1;
+        int y_ex1 = y + M1;
+        int M2 = min(x, y);
+        int x_ex2 = x - M2;
+        int y_ex2 = y - M2;
+        int M3 = min(x, size-1-y);
+        int x_ex3 = x - M3;
+        int y_ex3 = y + M3;
+        int M4 = min(size-1-x, y);
+        int x_ex4 = x + M4;
+        int y_ex4 = y - M4;
+        Coord C1(x_ex1, y_ex1);
+        Coord C2(x_ex2, y_ex2);
+        Coord C3(x_ex3, y_ex3);
+        Coord C4(x_ex4, y_ex4);
+        Coord extrem_coords[4] = {C1, C2, C3, C4};
+        vector<Coord> diags[4];
+        for(int i=0;i<4;i++){
+            diags[i] = diag_large(start, extrem_coords[i]);
+        }
+        bool can_eat;
+        for(int i=0;i<4;i++){
+            can_eat = false;
+            for(int j=0;j<diags[i].size();j++){
+                if(getPlayer(diags[i][j])==getPlayer(start)){
+                    break;
+                }else if(getPlayer(diags[i][j])==3-getPlayer(start)){
+                    can_eat = true;
+                }else if(get(diags[i][j])==0 && can_eat){
+                    moves.push_back(diags[i][j]);
+                }
+            }
+        }
+        return moves;
+    }
+    Coord D1(x-2, y-2);
+    Coord D2(x-2, y+2);
+    Coord D3(x+2, y-2);
+    Coord D4(x+2, y+2);
+    Coord move_test[4] = {D1, D2, D3, D4};
+    int player = getPlayer(start);
+    for(int i=0;i<4;i++){
+        if(get(move_test[i])==0){
+            Move M(start, move_test[i]);
+            if(eated(player, M).size()>0){
+                moves.push_back(move_test[i]);
+            }
+        }
+    }
+    return moves;
+}
+
+vector<Coord> Grid::availableEaters(int player){
+    vector<Coord> res;
+    res.clear();
+    for(int i=0;i<size;i++){
+        for(int j=0;j<size;j++){
+            Coord C(i, j);
+            if(getPlayer(C)==player && availableEats(C).size()>0){
+                res.push_back(C);
+            }
+        }
+    }
+    return res;
+}
+
+bool Grid::canEat(int player){
+    return (availableEaters(player).size()>0);
+}
+
+
+vector<Coord> Grid::playables(int player){
+    vector<Coord> res;
+    res.clear();
+    if(canEat(player)){
+        return availableEaters(player);
+    }
+    return movables(player);
+}
+
+
+vector<Coord> Grid::availablePlays(Coord start){
+    int player = getPlayer(start);
+    if(canEat(player)){
+        return availableEats(start);
+    }
+    return availableMoves(start);
+}
+
+
+Move Grid::minMax(int player, int depth){
+    Move best_move;
+    if(depth==0 || isEnded()){
+        best_move.setPoints(points(player));
+        return best_move;
+    }
+    int max_move = -50;
+    vector<Coord> playable = playables(player);
+    for(int i=0;i<playable.size();i++){
+        vector<Coord> plays = availablePlays(playable[i]);
+        for(int j=0;j<plays.size();j++){
+            Move move(playable[i], plays[j]);
+            play(player, move);
+            int mult = 1;
+            if(canEat(player)){
+                move = minMax(player, depth-1);
+            }else{
+                move = minMax(3-player, depth-1);
+                mult = -1;
+            }
+            go_back();
+            int points = move.getPoints();
+            move.setPoints(mult*points);
+            if(move.getPoints()>max_move){
+                max_move = move.getPoints();
+                best_move.init = playable[i];
+                best_move.end = plays[j];
+            }
+        }
+    }
+    return best_move;
+}
+
+void send(Move move){
+    cout<<move.init.x<<","<<move.init.y<<";"<<move.end.x<<","<<move.end.y<<endl;
+}
+
+void send(vector<Coord> eats){
+    for(int i=0;i<eats.size();i++){
+        if(i>1){
+            cout<<";";
+        }
+        cout<<eats[i].x<<","<<eats[i].y;
+    }
+    cout<<endl;
+}
 
 
 

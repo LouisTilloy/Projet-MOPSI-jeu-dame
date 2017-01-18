@@ -10,6 +10,11 @@ import numpy as np
 
 import grid
 import piece
+import os, sys
+import subprocess
+
+
+NUM = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
 
 
 def diag(coords_1, coords_2):
@@ -117,7 +122,7 @@ class Game(grid.Grid):
         Returns the eaten coordinate. """
         # WARNING : tests must be added in the method so that coordsInit and
         # coordsFinal are compatibles.
-        eaten_player = self.players[3-self.currentPlayer.number]
+        eaten_player = self.players[2-self.currentPlayer.number]
         self.move(coordsInit, coordsFinal)
         for coords in diag(coordsFinal, coordsInit): # from coordsFinal excluded
                                                     # to coordsInit included
@@ -352,6 +357,48 @@ class Game(grid.Grid):
             if self[i, line] != None:
                 if self[i, line].player == nPlayer and self[i, line].isLady == False:
                     self[i, line].isLady = True
+
+    def IA_turn(self, depth):
+        """Communication with the c++ programm and playing the move chosen by IA"""
+        table = ""
+        for i in range(self.size):
+            for j in range(self.size):
+                value = 0
+                if self[i, j] != None:
+                    if self[i, j].player == 1:
+                        value = 1
+                    else:
+                        value = 2
+                    if self[i, j].isLady:
+                        value += 2
+                table += str(value)
+        pipe = subprocess.Popen(["IA.exe", "grid", table, str(depth)], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+        answer = pipe.communicate()[0].decode('ascii')
+        error = pipe.communicate()[1].decode('ascii')
+        if(error != ''):
+            print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++")
+            print("!!!ERRORR CPP!!!   ", error)
+            print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++")
+        move_eats = answer.split('\n')
+        str_move = move_eats[0].split(';')
+        str_start = str_move[0].split(',')
+        str_end = str_move[1].split(',')
+        start = (int(str_start[0][0]), int(str_start[1][0]))
+        end = (int(str_end[0][0]), int(str_end[1][0]))
+        self.move(start, end)
+        move = [start, end]
+        eats = []
+        if len(move_eats[1]) > 2:
+            str_eats = move_eats[1].split(';')
+            for str_eat in str_eats:
+                str_coo = str_eat.split(',')
+                eat = (int(str_coo[0][0]), int(str_coo[1][0]))
+                self[eat] = None
+                eats += [eat]
+        return move, eats
+
+
+
     def begin(self):
         """Starts the loop of the game."""
         while self.winner()==False:

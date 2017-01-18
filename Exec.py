@@ -12,6 +12,7 @@ test_4 = False
 test_5 = False
 test_6 = False
 test_7 = True
+test_8 = False
 
 
 
@@ -146,3 +147,11 @@ if test_7:
                 print(n1-n2)
         elif cmd[1] == "can_eat":
             print(G.canEat(int(cmd[2])))
+
+if test_8:
+    G = Game()
+    C = (1,6)
+    D = (0,5)
+    G.move(C, D)
+    G.IA_turn(1)
+    G.disp()
