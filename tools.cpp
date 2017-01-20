@@ -492,11 +492,14 @@ Move Grid::minMax(int player, int depth){
                 max_move = move.getPoints();
                 best_move.init = playable[i];
                 best_move.end = plays[j];
+                best_move.setPoints(max_move);
             }
         }
     }
     return best_move;
 }
+
+
 
 void send(Move move){
     cout<<move.init.x<<","<<move.init.y<<";"<<move.end.x<<","<<move.end.y<<endl;

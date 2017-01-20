@@ -18,9 +18,16 @@ using namespace std;
 
 
 string iToStr(int a);
-
+//converts int into string
+//(I haven't really found easier ways)
+int strToInt(string s);
+//converts string into int (same thing)
 
 class Coord{
+    //field that can tell if there is a piece on this Coord, to which
+    //player it belongs and if it's a Lady
+    //it is only used in one or two functions, to help remember what were
+    //the pieces that were eaten (player, Lady) when you only have a vector of Coord of the eats
     int type;
 public:
   int x, y;
@@ -47,11 +54,17 @@ public:
   }
 };
 
+
+//same as in python
+//this one is used for the moves
 vector<Coord> diag_large(Coord init, Coord end);
+//this one is used for the eats (only considers the Coords strictly between init and end)
 vector<Coord> diag(Coord init, Coord end);
 
 
 class Move{
+  //this field is one way I could think of to carry the evaluation of a move all along the minMax algorithm
+  //the more "points" is high, the more the player should play this move
   int points;
 public:
   Coord init, end;
@@ -93,17 +106,21 @@ public:
 };
 
 
-
+//not usefull at all
 int occupy_type(Coord C);
+//get the information of the game from the python's script
 vector<int> getGrid();
 
 
 class Grid{
+  //Where we keep all the data from the game
   int* tab;
   int size;
   bool ended;
   int nPieces[2];
+  //vector of all the lasts moves (so that we can go back as many times as we want)
   vector<Move> move_seq;
+  //vector of all the last eats (to recreate the pieces eaten when we go back)
   vector<vector<Coord> > eat_seq;
 public:
   Grid(int inputSize){
@@ -115,6 +132,7 @@ public:
     eat_seq.clear();
   }
   int getPlayer(int i, int j){
+    //gives the number of the player to whome belongs the piece at (i, j)
     if(get(i, j)==1 || get(i, j)==3){
         return 1;
     }else if(get(i, j)==2 || get(i, j)==4){
@@ -123,6 +141,7 @@ public:
     return 0;
   }
   int getPlayer(Coord C){
+    //same but with Coord
     return getPlayer(C.x, C.y);
   }
   void vect_copy(vector<int> V){
@@ -154,6 +173,7 @@ public:
     }
   }
   int get(int i, int j){
+    //classic get
     if(i<0 || j<0 || i>=size || j>=size){
         return 5;
     }
@@ -163,10 +183,13 @@ public:
     return get(C.x, C.y);
   }
   void copy(){
+    //obsolete but we never know
+    //copy the game from the python script
     vector<int> tab_grid = getGrid();
     vect_copy(tab_grid);
   }
   void disp(){
+    //displays the grid (for debug)
     cout<<"["<<endl;
     for(int i=0;i<size;i++){
       cout<<"[";
@@ -181,6 +204,9 @@ public:
     cout<<"]"<<endl;
   }
   string putStr(){
+      //puts all the necessary informations of the grid in
+      //a string so that we can communicate those informations to
+      //th python script by a cout
       string res = "";
       for(int i=0;i<size;i++){
           for(int j=0;j<size;j++){
@@ -190,13 +216,17 @@ public:
       return res;
   }
   bool isEnded(){
+      //tells if the game is finished
       return (nPieces[0]<=0 || nPieces[1]<=0);
   }
   int points(int player){
+      //evaluation function that returns the diff between the player's number of pieces and
+      //and his adversary's
       return nPieces[player-1] - nPieces[2-player];
   }
 
   vector<Coord> eated(int player, Move move){
+      //returns the coords of the pieces that are eaten when the player does a certain move
       vector<Coord> diagonale = diag(move.init, move.end);
       vector<Coord> vect;
       vect.clear();
@@ -213,6 +243,7 @@ public:
       return vect;
   }
   void play(int player, Move move){
+      //changes the grid according to the move given in parameter
       vector<Coord> eats = eated(player, move);
       nPieces[2-player] -= eats.size();
       for(int i=0;i<eats.size();i++){
@@ -225,6 +256,7 @@ public:
       move_seq.push_back(move);
   }
   void go_back(){
+      //Cancel the last move
       vector<Coord> eats = eat_seq.back();
       eat_seq.pop_back();
       Move move = move_seq.back();
@@ -239,6 +271,7 @@ public:
       set(move.end.x, move.end.y, 0);
       set(move.init.x, move.init.y, a);
   }
+  //same as in python
   vector<Coord> availableMoves(Coord start);
   vector<Coord> movables(int player);
   vector<Coord> availableEats(Coord start);
@@ -249,9 +282,16 @@ public:
   Move minMax(int player, int depth);
 };
 
+//function that communicate with the python script, telling it what to do
 string action(string actionName);
-vector<Move> getMoves(Coord start, Grid G);
+
+
+//function that runs a system command and returns the output
 string exec(const char* cmd);
+
+//All those function are based on the communication with the python script and therefore are
+//much slower than the Grid's methodes that do the same thing but only in c++
+vector<Move> getMoves(Coord start, Grid G);
 vector<Coord> getMovables(int player, Grid G);
 vector<Coord> getEaters(int player, Grid G);
 vector<Coord> getEats(Coord start, Grid G);
@@ -260,6 +300,10 @@ bool canEat(int player, Grid G);
 vector<Coord> getPlayables(int player, Grid G);
 int play(int player, Move move, Grid G);
 vector<Coord> possiblePlays(int player, Coord start, Grid G);
+
+//function that will send the output of the IA to the python's script:
+//sending the move to do
 void send(Move move);
+//sending the eventual eats implied by the move
 void send(vector<Coord> eats);
 
