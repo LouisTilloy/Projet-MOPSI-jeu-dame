@@ -476,10 +476,12 @@ Move Grid::minMax(int player, int depth){
     for(int i=0;i<playable.size();i++){
         vector<Coord> plays = availablePlays(playable[i]);
         for(int j=0;j<plays.size();j++){
+            bool play_again = (availableEats(playable[i]).size()>0);
             Move move(playable[i], plays[j]);
             play(player, move);
+            play_again = (play_again && availableEats(plays[j]).size()>0);
             int mult = 1;
-            if(canEat(player)){
+            if(play_again){
                 move = minMax(player, depth-1);
             }else{
                 move = minMax(3-player, depth-1);
