@@ -73,6 +73,7 @@ Move min_max(Grid& G, int player, int depth){
             Move move(playable[i], plays[j]);
             G.play(player, move);
             int mult = 1;
+
             if(canEat(player, G)){
                 move = min_max(G, player, depth-1);
             }else{
@@ -80,6 +81,7 @@ Move min_max(Grid& G, int player, int depth){
                 mult = -1;
             }
             G.go_back();
+
             int points = move.getPoints();
             move.setPoints(mult*points);
             if(move.getPoints()>max_move){
@@ -397,15 +399,15 @@ vector<Coord> Grid::availableEats(Coord start){
         for(int i=0;i<4;i++){
             diags[i] = diag_large(start, extrem_coords[i]);
         }
-        bool can_eat;
+        int can_eat;
         for(int i=0;i<4;i++){
-            can_eat = false;
+            can_eat = 0;
             for(int j=0;j<diags[i].size();j++){
                 if(getPlayer(diags[i][j])==getPlayer(start)){
                     break;
                 }else if(getPlayer(diags[i][j])==3-getPlayer(start)){
-                    can_eat = true;
-                }else if(get(diags[i][j])==0 && can_eat){
+                    can_eat++;
+                }else if(get(diags[i][j])==0 && can_eat==1){
                     moves.push_back(diags[i][j]);
                 }
             }
@@ -483,13 +485,20 @@ Move Grid::minMax(int player, int depth){
             play(player, move);
             play_again = (play_again && availableEats(plays[j]).size()>0);
             int mult = 1;
+            vector<Coord> new_ladies;
             if(play_again){
                 move = minMax(player, depth-1);
             }else{
+                new_ladies = check_ladies();
                 move = minMax(3-player, depth-1);
                 mult = -1;
             }
             go_back();
+            for(int k=0;k<new_ladies.size();k++){
+              int x_l = new_ladies[k].x;
+              int y_l = new_ladies[k].y;
+              set(x_l,y_l,get(x_l,y_l)-2);
+            }
             int points = move.getPoints();
             move.setPoints(mult*points);
             if(move.getPoints()>max_move){
@@ -518,9 +527,3 @@ void send(vector<Coord> eats){
     }
     cout<<endl;
 }
-
-
-
-
-
-

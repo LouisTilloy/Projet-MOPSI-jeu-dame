@@ -17,14 +17,17 @@ int main(){
     int step = 0; //number of turns before we end the game if it is not yet ended
     while (!game.isEnded() && !stop && step<200){
         // 1 turn of the game
-        Grid_AI gameTemp (game);
         // The AIs play according to the minMax algorithm
-        Move move = gameTemp.minMax(nPlayer, nPlayer, depth);
+        Move move = game.minMax(nPlayer, nPlayer, depth);
+        //cout<<endl;
+        //game.move_seq[step].disp();
         game.play(nPlayer, move);
         // The game checks if there are any piece to transform into a lady
-        game.turnLady(nPlayer);
         // Next turn is played by the other player
-        nPlayer = 3-nPlayer;
+        if(!game.canEat(nPlayer)){
+          game.check_ladies();
+          nPlayer = 3-nPlayer;
+        }
 
         // Display information
         game.disp();

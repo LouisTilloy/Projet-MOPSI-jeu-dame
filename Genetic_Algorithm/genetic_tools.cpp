@@ -86,6 +86,7 @@ Move Grid_AI::minMax(int player, int minmaxPlayer, int depth){
             Move move(playable[i], plays[j]);
             play(player, move);
             play_again = (play_again && availableEats(plays[j]).size()>0);
+            vector<Coord> new_ladies;
             int mult = 1;
             if(play_again){
                 move = minMax(player, minmaxPlayer, depth-1);
@@ -94,6 +95,11 @@ Move Grid_AI::minMax(int player, int minmaxPlayer, int depth){
                 mult = -1;
             }
             go_back();
+            for(int k=0;k<new_ladies.size();k++){
+              int x_l = new_ladies[k].x;
+              int y_l = new_ladies[k].y;
+              set(x_l,y_l,get(x_l,y_l)-2);
+            }
             int points = move.getPoints();
             move.setPoints(mult*points);
             if(move.getPoints()>max_move){

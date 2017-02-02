@@ -274,11 +274,29 @@ public:
       for(int i=0;i<eats.size();i++){
           set(eats[i].x, eats[i].y, eats[i].getType());
           eated_player = eats[i].getType();
-          nPieces[eated_player-1]++;
+
+          nPieces[1-(eated_player%2)]++;
       }
       int a = get(move.end.x, move.end.y);
       set(move.end.x, move.end.y, 0);
       set(move.init.x, move.init.y, a);
+  }
+
+  vector<Coord> check_ladies(){
+    vector<Coord> new_ladies;
+      for(int x=0;x<size;x++){
+          if(get(x,0)==1){
+              set(x,0,3);
+              Coord C(x,0);
+              new_ladies.push_back(C);
+          }
+          if(get(x,size-1)==2){
+              set(x,size-1,4);
+              Coord C(x,size-1);
+              new_ladies.push_back(C);
+          }
+      }
+      return new_ladies;
   }
   //same as in python
   vector<Coord> availableMoves(Coord start);
