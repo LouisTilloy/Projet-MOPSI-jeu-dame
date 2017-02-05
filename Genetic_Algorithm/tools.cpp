@@ -512,6 +512,63 @@ Move Grid::minMax(int player, int depth){
     return best_move;
 }
 
+Move Grid::minMaxEq(int player, int nodes){
+    Move best_move;
+    if(nodes==0 || isEnded()){
+        best_move.setPoints(points(player));
+        return best_move;
+    }
+    int max_move = -10000;
+    vector<Coord> playable = playables(player);
+    vector<Move> allYouCanDo;
+    for(int i=0;i<playable.size();i++){
+        vector<Coord> plays = availablePlays(playable[i]);
+        for(int j=0;j<plays.size();j++){
+            Move M(playable[i], plays[j]);
+            allYouCanDo.push_back(M);
+        }
+    }
+    int nbBranches = allYouCanDo.size();
+    int quotient = int(nodes/nbBranches);
+    int reste = nodes%nbBranches;
+    for(int i=0;i<allYouCanDo.size();i++){
+        int part_nodes = quotient;
+        if(reste>0){
+            part_nodes++;
+            reste--;
+        }
+            bool play_again = (availableEats(allYouCanDo[i].init).size()>0);
+            Move move(allYouCanDo[i]);
+            play(player, move);
+            play_again = (play_again && availableEats(allYouCanDo[i].end).size()>0);
+            int mult = 1;
+            vector<Coord> new_ladies;
+            if(play_again){
+                move = minMax(player, part_nodes);
+            }else{
+                check_ladies();
+                move = minMax(3-player, part_nodes);
+                mult = -1;
+            }
+            go_back();
+            for(int k=0;k<new_ladies.size();k++){
+              int x_l = new_ladies[k].x;
+              int y_l = new_ladies[k].y;
+              set(x_l,y_l,get(x_l,y_l)-2);
+            }
+            int points = move.getPoints();
+            move.setPoints(mult*points);
+            if(move.getPoints()>max_move){
+                max_move = move.getPoints();
+                best_move.init = allYouCanDo[i].init;
+                best_move.end = allYouCanDo[i].end;
+                best_move.setPoints(max_move);
+            }
+    }
+    return best_move;
+}
+
+
 
 
 void send(Move move){

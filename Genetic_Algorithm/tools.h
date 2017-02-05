@@ -307,6 +307,7 @@ public:
   vector<Coord> playables(int player);
   vector<Coord> availablePlays(Coord start);
   Move minMax(int player, int depth);
+  Move minMaxEq(int player, int nodes);
 };
 
 //function that communicate with the python script, telling it what to do

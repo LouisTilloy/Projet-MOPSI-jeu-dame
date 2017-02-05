@@ -1,7 +1,6 @@
 #ifndef TOOLS_H
 #define TOOLS_H
 
-#endif //TOOLS_H
 
 #include <iostream>
 #include <math.h>
@@ -34,10 +33,10 @@ public:
   Coord(){
       type = 0;
   }
-  Coord(int i, int j){
+  Coord(int x0, int y0){
         type = 0;
-        x = i;
-        y = j;
+        x = x0;
+        y = y0;
   }
   void disp(){
     cout<<"("<<x<<", "<<y<<")"<<endl;
@@ -113,29 +112,37 @@ vector<int> getGrid();
 
 
 class Grid{
+protected:
   //Where we keep all the data from the game
   int* tab;
   int size;
   bool ended;
+public:
   int nPieces[2];
+  int nLady[2];
   //vector of all the lasts moves (so that we can go back as many times as we want)
   vector<Move> move_seq;
   //vector of all the last eats (to recreate the pieces eaten when we go back)
   vector<vector<Coord> > eat_seq;
-public:
+//public:
+  Grid(){}
+  ~Grid(){ delete[] tab;}
+
   Grid(int inputSize){
     size = inputSize;
     tab = new int[size*size];
     nPieces[0] = 0;
     nPieces[1] = 0;
+    nLady[0] = 0;
+    nLady[1] = 0;
     move_seq.clear();
     eat_seq.clear();
   }
-  int getPlayer(int i, int j){
+  int getPlayer(int x, int y){
     //gives the number of the player to whome belongs the piece at (i, j)
-    if(get(i, j)==1 || get(i, j)==3){
+    if(get(x, y)==1 || get(x, y)==3){
         return 1;
-    }else if(get(i, j)==2 || get(i, j)==4){
+    }else if(get(x, y)==2 || get(x, y)==4){
         return 2;
     }
     return 0;
@@ -164,20 +171,20 @@ public:
       return get(C.x, C.y);
   }
 
-  int operator()(int i, int j){
-    return get(i, j);
+  int operator()(int x, int y){
+    return get(x, y);
   }
-  void set(int i, int j, int s){
-    if(i>=0 && j>=0 && i<size && j<size){
-        tab[i*size+j] = s;
+  void set(int x, int y, int s){
+    if(x>=0 && y>=0 && x<size && y<size){
+        tab[x*size+y] = s;
     }
   }
-  int get(int i, int j){
+  int get(int x, int y){
     //classic get
-    if(i<0 || j<0 || i>=size || j>=size){
+    if(y<0 || x<0 || y>=size || x>=size){
         return 5;
     }
-    return tab[i*size+j];
+    return tab[x*size+y];
   }
   int get(Coord C){
     return get(C.x, C.y);
@@ -191,13 +198,13 @@ public:
   void disp(){
     //displays the grid (for debug)
     cout<<"["<<endl;
-    for(int i=0;i<size;i++){
+    for(int y=0;y<size;y++){
       cout<<"[";
-      for(int j=0;j<size;j++){
-        if(j>0){
+      for(int x=0;x<size;x++){
+        if(x>0){
           cout<<", ";
         }
-        cout<<get(j, i);
+        cout<<get(x, y);
       }
       cout<<"]"<<endl;
     }
@@ -208,9 +215,9 @@ public:
       //a string so that we can communicate those informations to
       //th python script by a cout
       string res = "";
-      for(int i=0;i<size;i++){
-          for(int j=0;j<size;j++){
-              res += iToStr(get(i, j));
+      for(int y=0;y<size;y++){
+          for(int x=0;x<size;x++){
+              res += iToStr(get(x, y));
           }
       }
       return res;
@@ -247,6 +254,8 @@ public:
       vector<Coord> eats = eated(player, move);
       nPieces[2-player] -= eats.size();
       for(int i=0;i<eats.size();i++){
+          if ( get(eats[i].x, eats[i].y) == 2-player + 2 )
+              nLady[2-player] --;
           set(eats[i].x, eats[i].y, 0);
       }
       int a = get(move.init.x, move.init.y);
@@ -265,11 +274,29 @@ public:
       for(int i=0;i<eats.size();i++){
           set(eats[i].x, eats[i].y, eats[i].getType());
           eated_player = eats[i].getType();
-          nPieces[eated_player-1]++;
+
+          nPieces[1-(eated_player%2)]++;
       }
       int a = get(move.end.x, move.end.y);
       set(move.end.x, move.end.y, 0);
       set(move.init.x, move.init.y, a);
+  }
+
+  vector<Coord> check_ladies(){
+    vector<Coord> new_ladies;
+      for(int x=0;x<size;x++){
+          if(get(x,0)==1){
+              set(x,0,3);
+              Coord C(x,0);
+              new_ladies.push_back(C);
+          }
+          if(get(x,size-1)==2){
+              set(x,size-1,4);
+              Coord C(x,size-1);
+              new_ladies.push_back(C);
+          }
+      }
+      return new_ladies;
   }
   //same as in python
   vector<Coord> availableMoves(Coord start);
@@ -280,6 +307,8 @@ public:
   vector<Coord> playables(int player);
   vector<Coord> availablePlays(Coord start);
   Move minMax(int player, int depth);
+  Move minMaxEq(int player, int nodes);
+  Move alphaBeta(int player, int depth, int alpha);
 };
 
 //function that communicate with the python script, telling it what to do
@@ -307,3 +336,4 @@ void send(Move move);
 //sending the eventual eats implied by the move
 void send(vector<Coord> eats);
 
+#endif //TOOLS_H

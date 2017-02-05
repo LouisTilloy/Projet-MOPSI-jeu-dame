@@ -73,6 +73,7 @@ Move min_max(Grid& G, int player, int depth){
             Move move(playable[i], plays[j]);
             G.play(player, move);
             int mult = 1;
+
             if(canEat(player, G)){
                 move = min_max(G, player, depth-1);
             }else{
@@ -80,6 +81,7 @@ Move min_max(Grid& G, int player, int depth){
                 mult = -1;
             }
             G.go_back();
+
             int points = move.getPoints();
             move.setPoints(mult*points);
             if(move.getPoints()>max_move){
@@ -329,10 +331,12 @@ vector<Coord> Grid::availableMoves(Coord start){
     }
     if(value<3){
         if(get(x-1, y+forward)==0){
+            //cout<<"GAUCHE"<<endl;
             Coord C1(x-1, y+forward);
             res.push_back(C1);
         }
         if(get(x+1, y+forward)==0){
+            //cout<<"DROITE"<<endl;
             Coord C2(x+1, y+forward);
             res.push_back(C2);
         }
@@ -354,10 +358,10 @@ vector<Coord> Grid::availableMoves(Coord start){
 vector<Coord> Grid::movables(int player){
     vector<Coord> res;
     res.clear();
-    for(int i=0;i<size;i++){
-        for(int j=0;j<size;j++){
-            if(getPlayer(i,j)==player){
-                Coord C(i, j);
+    for(int y=0;y<size;y++){
+        for(int x=0;x<size;x++){
+            if(getPlayer(x,y)==player){
+                Coord C(x, y);
                 if(availableMoves(C).size()>0){
                     res.push_back(C);
                 }
@@ -395,15 +399,15 @@ vector<Coord> Grid::availableEats(Coord start){
         for(int i=0;i<4;i++){
             diags[i] = diag_large(start, extrem_coords[i]);
         }
-        bool can_eat;
+        int can_eat;
         for(int i=0;i<4;i++){
-            can_eat = false;
+            can_eat = 0;
             for(int j=0;j<diags[i].size();j++){
                 if(getPlayer(diags[i][j])==getPlayer(start)){
                     break;
                 }else if(getPlayer(diags[i][j])==3-getPlayer(start)){
-                    can_eat = true;
-                }else if(get(diags[i][j])==0 && can_eat){
+                    can_eat++;
+                }else if(get(diags[i][j])==0 && can_eat==1){
                     moves.push_back(diags[i][j]);
                 }
             }
@@ -430,9 +434,9 @@ vector<Coord> Grid::availableEats(Coord start){
 vector<Coord> Grid::availableEaters(int player){
     vector<Coord> res;
     res.clear();
-    for(int i=0;i<size;i++){
-        for(int j=0;j<size;j++){
-            Coord C(i, j);
+    for(int y=0;y<size;y++){
+        for(int x=0;x<size;x++){
+            Coord C(x, y);
             if(getPlayer(C)==player && availableEats(C).size()>0){
                 res.push_back(C);
             }
@@ -471,7 +475,7 @@ Move Grid::minMax(int player, int depth){
         best_move.setPoints(points(player));
         return best_move;
     }
-    int max_move = -50;
+    int max_move = -10000;
     vector<Coord> playable = playables(player);
     for(int i=0;i<playable.size();i++){
         vector<Coord> plays = availablePlays(playable[i]);
@@ -481,13 +485,20 @@ Move Grid::minMax(int player, int depth){
             play(player, move);
             play_again = (play_again && availableEats(plays[j]).size()>0);
             int mult = 1;
+            vector<Coord> new_ladies;
             if(play_again){
                 move = minMax(player, depth-1);
             }else{
+                new_ladies = check_ladies();
                 move = minMax(3-player, depth-1);
                 mult = -1;
             }
             go_back();
+            for(int k=0;k<new_ladies.size();k++){
+              int x_l = new_ladies[k].x;
+              int y_l = new_ladies[k].y;
+              set(x_l,y_l,get(x_l,y_l)-2);
+            }
             int points = move.getPoints();
             move.setPoints(mult*points);
             if(move.getPoints()>max_move){
@@ -500,6 +511,117 @@ Move Grid::minMax(int player, int depth){
     }
     return best_move;
 }
+
+Move Grid::minMaxEq(int player, int nodes){
+    Move best_move;
+    if(nodes==0 || isEnded()){
+        best_move.setPoints(points(player));
+        return best_move;
+    }
+    int max_move = -10000;
+    vector<Coord> playable = playables(player);
+    vector<Move> allYouCanDo;
+    for(int i=0;i<playable.size();i++){
+        vector<Coord> plays = availablePlays(playable[i]);
+        for(int j=0;j<plays.size();j++){
+            Move M(playable[i], plays[j]);
+            allYouCanDo.push_back(M);
+        }
+    }
+    int nbBranches = allYouCanDo.size();
+    int quotient = (int)(nodes/nbBranches);
+    int reste = nodes%nbBranches;
+    for(int i=0;i<allYouCanDo.size();i++){
+        int part_nodes = quotient;
+        if(reste>0){
+            part_nodes++;
+            reste--;
+        }
+        bool play_again = (availableEats(allYouCanDo[i].init).size()>0);
+        Move move(allYouCanDo[i]);
+        play(player, move);
+        play_again = (play_again && availableEats(allYouCanDo[i].end).size()>0);
+        int mult = 1;
+        vector<Coord> new_ladies;
+        if(play_again){
+            move = minMax(player, part_nodes);
+        }else{
+            check_ladies();
+            move = minMax(3-player, part_nodes);
+            mult = -1;
+        }
+        go_back();
+        for(int k=0;k<new_ladies.size();k++){
+          int x_l = new_ladies[k].x;
+          int y_l = new_ladies[k].y;
+          set(x_l,y_l,get(x_l,y_l)-2);
+        }
+        int points = move.getPoints();
+        move.setPoints(mult*points);
+        if(move.getPoints()>max_move){
+            max_move = move.getPoints();
+            best_move.init = allYouCanDo[i].init;
+            best_move.end = allYouCanDo[i].end;
+            best_move.setPoints(max_move);
+        }
+    }
+    return best_move;
+}
+
+
+
+Move Grid::alphaBeta(int player, int depth, int alpha){
+  Move best_move;
+  if(depth==0 || isEnded()){
+      best_move.setPoints(points(player));
+      return best_move;
+  }
+  int beta = -10000;
+  bool go_on = true;
+  vector<Coord> playable = playables(player);
+  for(int i=0;i<playable.size();i++){
+      vector<Coord> plays = availablePlays(playable[i]);
+      for(int j=0;j<plays.size();j++){
+          bool play_again = (availableEats(playable[i]).size()>0);
+          Move move(playable[i], plays[j]);
+          play(player, move);
+          play_again = (play_again && availableEats(plays[j]).size()>0);
+          int mult = 1;
+          vector<Coord> new_ladies;
+          if(play_again){
+              move = alphaBeta(player, depth-1, beta);
+          }else{
+              new_ladies = check_ladies();
+              move = alphaBeta(3-player, depth -1, beta);
+              mult = -1;
+          }
+          go_back();
+          for(int k=0;k<new_ladies.size();k++){
+            int x_l = new_ladies[k].x;
+            int y_l = new_ladies[k].y;
+            set(x_l,y_l,get(x_l,y_l)-2);
+          }
+          int points = move.getPoints();
+          move.setPoints(mult*points);
+          if(move.getPoints() <=alpha){
+            go_on = false;
+            break;
+          }
+          if(move.getPoints()>beta){
+              beta = move.getPoints();
+              best_move.init = playable[i];
+              best_move.end = plays[j];
+              best_move.setPoints(beta);
+          }
+      }
+      if(!go_on){
+        break;
+      }
+  }
+  return best_move;
+}
+
+
 
 
 
@@ -516,9 +638,3 @@ void send(vector<Coord> eats){
     }
     cout<<endl;
 }
-
-
-
-
-
-

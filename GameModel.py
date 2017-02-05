@@ -6,6 +6,7 @@ Contains:
 and which allows to play the game
 """
 import copy
+import numpy as np
 
 import grid
 import piece
@@ -63,7 +64,7 @@ class Game(grid.Grid):
     """ Contains all the methods necessary to play the game between
     two human players """
     def __init__(self, name1="Jessy", name2="James", size=10):
-        grid.Grid.__init__(self, size)
+        grid.Grid.__init__(self, size, )
 
         if (size != 10):
             print("/!\ The official french version of the")
@@ -97,6 +98,24 @@ class Game(grid.Grid):
         self[coordsFinal] = self[coordsInit]
         self[coordsInit] = None
 
+#    def eat(self, coordsInit, coordsEaten):
+#        """ moves the piece with the coordinates coordsInit to the position
+#        where it must be after eating the piece with the coordinates
+#        coordsEaten """
+#        if not self[coordsInit].isLady:
+#            dx, dy = 1, 1
+#            if coordsEaten[0] - coordsInit[0] < 0:
+#                dx = -1
+#            if coordsEaten[1] - coordsInit[1] < 0:
+#                dy = -1
+#            coordsFinal = (coordsEaten[0]+dx, coordsEaten[1]+dy)
+#            self.move(coordsInit, coordsFinal)
+#            self[coordsEaten] = None
+#            return coordsFinal
+#        else:
+#            for coord in coordsEaten:
+#                self[coord] = None
+
     def eat(self, coordsInit, coordsFinal):
         """ moves the piece with the coordinates coordsInit to the position
         coordsEaten after eating the piece on its path.
@@ -109,8 +128,6 @@ class Game(grid.Grid):
                                                     # to coordsInit included
                                                     # (which is already a None)
             if self[coords] != None:
-                self.players[self[coords].player-1].nPieces -= 1 # The player of the eaten
-                                        # piece has 1 piece less than before
                 self[coords] = None
                 eaten_player.nPieces -= 1
                 return coords
@@ -355,9 +372,13 @@ class Game(grid.Grid):
                     if self[i, j].isLady:
                         value += 2
                 table += str(value)
-        pipe = subprocess.Popen(["IA.exe", "grid", table, str(depth)], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+        """pipe = subprocess.Popen(["IA.exe", "grid", table, str(depth)], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
         answer = pipe.communicate()[0].decode('ascii')
-        error = pipe.communicate()[1].decode('ascii')
+        error = pipe.communicate()[1].decode('ascii')"""
+        technique = 3
+        process = subprocess.run(["IA.exe", "grid", table, str(technique), str(depth)], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+        answer = process.stdout.decode();
+        error = process.stderr.decode();
         if(error != ''):
             print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++")
             print("!!!ERRORR CPP!!!   ", error)
@@ -379,6 +400,7 @@ class Game(grid.Grid):
                 self[eat] = None
                 eats += [eat]
         return move, eats
+
 
 
 
