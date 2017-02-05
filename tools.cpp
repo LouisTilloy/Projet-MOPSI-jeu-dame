@@ -570,7 +570,7 @@ Move Grid::minMaxEq(int player, int nodes){
 
 
 
-Move Grid::alphaBeta(int player, int depth, int alpha){
+Move Grid::alphaBeta(int player, int depth, int alpha, bool elag){
   Move best_move;
   if(depth==0 || isEnded()){
       best_move.setPoints(points(player));
@@ -589,10 +589,10 @@ Move Grid::alphaBeta(int player, int depth, int alpha){
           int mult = 1;
           vector<Coord> new_ladies;
           if(play_again){
-              move = alphaBeta(player, depth-1, beta);
+              move = alphaBeta(player, depth-1, beta, false);
           }else{
               new_ladies = check_ladies();
-              move = alphaBeta(3-player, depth -1, beta);
+              move = alphaBeta(3-player, depth -1, beta, true);
               mult = -1;
           }
           go_back();
@@ -603,15 +603,15 @@ Move Grid::alphaBeta(int player, int depth, int alpha){
           }
           int points = move.getPoints();
           move.setPoints(mult*points);
-          if((!play_again) && (-move.getPoints() <=alpha)){
-            go_on = false;
-            break;
-          }
           if(move.getPoints()>beta){
               beta = move.getPoints();
               best_move.init = playable[i];
               best_move.end = plays[j];
               best_move.setPoints(beta);
+          }
+          if(elag && (-move.getPoints() <=alpha)){
+            go_on = false;
+            break;
           }
       }
       if(!go_on){

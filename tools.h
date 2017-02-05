@@ -308,7 +308,7 @@ public:
   vector<Coord> availablePlays(Coord start);
   Move minMax(int player, int depth);
   Move minMaxEq(int player, int nodes);
-  Move alphaBeta(int player, int depth, int alpha);
+  Move alphaBeta(int player, int depth, int alpha, bool elag);
 };
 
 //function that communicate with the python script, telling it what to do
