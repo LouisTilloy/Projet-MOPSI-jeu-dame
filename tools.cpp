@@ -603,7 +603,7 @@ Move Grid::alphaBeta(int player, int depth, int alpha){
           }
           int points = move.getPoints();
           move.setPoints(mult*points);
-          if(move.getPoints() <=alpha){
+          if((!play_again) && (-move.getPoints() <=alpha)){
             go_on = false;
             break;
           }

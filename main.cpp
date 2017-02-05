@@ -14,7 +14,7 @@ int main(int argc, char** argv){
         Move move(initCoord, endCoord);
         G.play(1, move);
         G.disp();
-        Move IA_move = G.alphaBeta(2, 3, -10000);
+        Move IA_move = G.alphaBeta(2, 4, -10000);
         G.play(2, IA_move);
         G.disp();
     }else{
