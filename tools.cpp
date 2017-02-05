@@ -493,12 +493,12 @@ Move Grid::minMax(int player, int depth){
                 move = minMax(3-player, depth-1);
                 mult = -1;
             }
-            go_back();
             for(int k=0;k<new_ladies.size();k++){
               int x_l = new_ladies[k].x;
               int y_l = new_ladies[k].y;
               set(x_l,y_l,get(x_l,y_l)-2);
             }
+            go_back();
             int points = move.getPoints();
             move.setPoints(mult*points);
             if(move.getPoints()>max_move){
@@ -550,12 +550,12 @@ Move Grid::minMaxEq(int player, int nodes){
             move = minMax(3-player, part_nodes);
             mult = -1;
         }
-        go_back();
         for(int k=0;k<new_ladies.size();k++){
           int x_l = new_ladies[k].x;
           int y_l = new_ladies[k].y;
           set(x_l,y_l,get(x_l,y_l)-2);
         }
+        go_back();
         int points = move.getPoints();
         move.setPoints(mult*points);
         if(move.getPoints()>max_move){
@@ -588,6 +588,7 @@ Move Grid::alphaBeta(int player, int depth, int alpha, bool elag){
           play_again = (play_again && availableEats(plays[j]).size()>0);
           int mult = 1;
           vector<Coord> new_ladies;
+          new_ladies.clear();
           if(play_again){
               move = alphaBeta(player, depth-1, beta, false);
           }else{
@@ -595,12 +596,12 @@ Move Grid::alphaBeta(int player, int depth, int alpha, bool elag){
               move = alphaBeta(3-player, depth -1, beta, true);
               mult = -1;
           }
-          go_back();
           for(int k=0;k<new_ladies.size();k++){
             int x_l = new_ladies[k].x;
             int y_l = new_ladies[k].y;
             set(x_l,y_l,get(x_l,y_l)-2);
           }
+          go_back();
           int points = move.getPoints();
           move.setPoints(mult*points);
           if(move.getPoints()>beta){
