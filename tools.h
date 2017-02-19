@@ -310,7 +310,8 @@ public:
   Move minMax(int player, int depth);
   Move minMaxEq(int player, int nodes);
   Move alphaBeta(int player, int depth, int alpha, bool elag);
-  Move Grid::bestLimitedAnswer(int player, double given_time);
+  Move bestLimitedAnswer(int player, int given_time);
+  Move alphaBetaLimited(int player, int depth, int alpha, bool elag, DWORD stop_time, bool& finished);
 };
 
 //function that communicate with the python script, telling it what to do

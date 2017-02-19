@@ -623,12 +623,107 @@ Move Grid::alphaBeta(int player, int depth, int alpha, bool elag){
 }
 
 
+Move Grid::alphaBetaLimited(int player, int depth, int alpha, bool elag, DWORD stop_time, bool& finished){
+  finished = true;
+  Move best_move;
+  if(depth==0 || isEnded()){
+      best_move.setPoints(points(player));
+      return best_move;
+  }
+  if(GetTickCount()>=stop_time){
+    finished = false;
+    return best_move;
+  }
+  int beta = -10000;
+  bool go_on = true;
+  vector<Coord> playable = playables(player);
+  for(int i=0;i<playable.size();i++){
+      if(GetTickCount()>=stop_time){
+          finished = false;
+          return best_move;
+      }
+      vector<Coord> plays = availablePlays(playable[i]);
+      for(int j=0;j<plays.size();j++){
+          if(GetTickCount()>=stop_time){
+              finished = false;
+              return best_move;
+          }
+          bool play_again = (availableEats(playable[i]).size()>0);
+          Move move(playable[i], plays[j]);
+          play(player, move);
+          play_again = (play_again && availableEats(plays[j]).size()>0);
+          int mult = 1;
+          if(GetTickCount()>=stop_time){
+            finished = false;
+            return best_move;
+          }
+          vector<Coord> new_ladies;
+          new_ladies.clear();
+          if(play_again){
+              move = alphaBeta(player, depth-1, beta, false);
+          }else{
+              new_ladies = check_ladies();
+              move = alphaBeta(3-player, depth -1, beta, true);
+              mult = -1;
+          }
+          if(GetTickCount()>=stop_time){
+            go_back();
+            finished = false;
+            return best_move;
+          }
+          for(int k=0;k<new_ladies.size();k++){
+            int x_l = new_ladies[k].x;
+            int y_l = new_ladies[k].y;
+            set(x_l,y_l,get(x_l,y_l)-2);
+          }
+          go_back();
+          if(GetTickCount()>=stop_time){
+            finished = false;
+            return best_move;
+          }
+          int points = move.getPoints();
+          if(GetTickCount()>=stop_time){
+            finished = false;
+            return best_move;
+          }
+          move.setPoints(mult*points);
+          if(move.getPoints()>beta){
+              beta = move.getPoints();
+              best_move.init = playable[i];
+              best_move.end = plays[j];
+              best_move.setPoints(beta);
+          }
+          if(GetTickCount()>=stop_time){
+            finished = false;
+            return best_move;
+          }
+          if(elag && (-move.getPoints() <=alpha)){
+            go_on = false;
+            break;
+          }
+      }
+      if(!go_on){
+        break;
+      }
+  }
+  return best_move;
+}
+
+
 Move Grid::bestLimitedAnswer(int player, int given_time){
-  DWORLD t1, t2;
+  DWORD t1, t2;
   t1 = GetTickCount();
   Move bestAnswer;
-  // pas fini
-  t2 = GetTickCount();
+  t2 = t1 + given_time;
+  for(int p=1;p<20;p++){
+    bool is_finished = true;
+    Move this_move = alphaBetaLimited(player, p, -10000, false, t2, is_finished);
+    if(is_finished){
+      bestAnswer = this_move;
+    }else{
+      break;
+    }
+  }
   return bestAnswer;
 }
 

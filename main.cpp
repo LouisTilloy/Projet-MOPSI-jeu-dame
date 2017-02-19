@@ -7,15 +7,25 @@ int main(int argc, char** argv){
         //Debug
         Grid G(10);
         G.copy();
+        for(int i=0;i<10;i++){
+          for(int j=0;j<10;j++){
+            G.set(i,j,0);
+          }
+        }
+        G.set(1,0,4);
+        G.set(3,2,1);
+        G.set(4,3,1);
         G.disp();
         string ch = "y";
         while(ch=="y"){
-          Move IA_move = G.alphaBeta(1, 7, -10000, true);
+          Move IA_move = G.bestLimitedAnswer(2, 2000);
+          IA_move.disp();
           G.play(1, IA_move);
           G.disp();
-          IA_move = G.alphaBeta(2, 7, -10000, true);
+          IA_move = G.bestLimitedAnswer(1, 2000);
           G.play(2, IA_move);
           G.disp();
+          cout<<G.isEnded()<<endl;
           cout<<"continue?  "<<endl;
           cin>>ch;
         }
@@ -55,7 +65,7 @@ int main(int argc, char** argv){
               case 3:
               {
                 int depth = argv[4][0] - '0';
-                IA_move = G.alphaBeta(2, depth, -10000, true);
+                IA_move = G.alphaBeta(2, depth, -10000, false);
               }
                 break;
             }
