@@ -3,7 +3,7 @@
 
 #include <iostream>
 #include <vector>
-#include "tools.h"
+#include "../tools.h"
 
 using namespace std;
 

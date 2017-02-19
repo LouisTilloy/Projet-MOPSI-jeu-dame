@@ -177,7 +177,7 @@ public:
   }
   void set(int x, int y, int s){
     if(x>=0 && y>=0 && x<size && y<size){
-        tab[x*size+y] = s;
+        tab[y*size+x] = s;
     }
   }
   int get(int x, int y){
@@ -185,7 +185,7 @@ public:
     if(y<0 || x<0 || y>=size || x>=size){
         return 5;
     }
-    return tab[x*size+y];
+    return tab[y*size+x];
   }
   int get(Coord C){
     return get(C.x, C.y);
@@ -255,7 +255,7 @@ public:
       vector<Coord> eats = eated(player, move);
       nPieces[2-player] -= eats.size();
       for(int i=0;i<eats.size();i++){
-          if ( get(eats[i].x, eats[i].y) == 2-player + 2 )
+          if ( get(eats[i].x, eats[i].y) == 3-player + 2 )
               nLady[2-player] --;
           set(eats[i].x, eats[i].y, 0);
       }
@@ -277,6 +277,9 @@ public:
           eated_player = eats[i].getType();
 
           nPieces[1-(eated_player%2)]++;
+          if (eated_player > 2){
+              nLady[1-(eated_player%2)]++;
+          }
       }
       int a = get(move.end.x, move.end.y);
       set(move.end.x, move.end.y, 0);

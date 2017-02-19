@@ -8,7 +8,7 @@ int main(){
     srand(time(NULL));
     rand();
     // A game between two AI
-    Grid_AI game = Grid_AI(10, 1, 2);
+    Grid_AI game = Grid_AI(10, 1, 100);
     cout << "nPiece[0]: "<< game.nPieces[0] << endl;
     cout << "nPiece[1]: "<< game.nPieces[1] << endl;
     game.disp();
@@ -19,28 +19,25 @@ int main(){
         // 1 turn of the game
         // The AIs play according to the minMax algorithm
         Move move = game.minMax(nPlayer, nPlayer, depth);
+        bool play_again = game.availableEats(move.init).size()>0;
         //cout<<endl;
         //game.move_seq[step].disp();
         game.play(nPlayer, move);
+        play_again = play_again && game.availableEats(move.end).size()>0;
         // The game checks if there are any piece to transform into a lady
         // Next turn is played by the other player
-        if(!game.canEat(nPlayer)){
-          game.check_ladies();
+        if(!play_again){
+          game.turnLady(nPlayer);
           nPlayer = 3-nPlayer;
         }
 
         // Display information
         game.disp();
-
-        vector<Move> testmove;
-        testmove.push_back(move);
-        testmove[0].disp();
-        cout << "move_seq.size(): "<<game.move_seq.size() <<endl;
-        game.move_seq[step].disp();
-        move.disp();
-
-        //cout << "nPiece[0]: "<< game.nPieces[0] << endl;
-        //cout << "nPiece[1]: "<< game.nPieces[1] << endl;
+        cout << "nPiece[0]: "<< game.nPieces[0] << endl;
+        cout << "nPiece[1]: "<< game.nPieces[1] << endl;
+        cout << "nLady[0]: "<< game.nLady[0] << endl;
+        cout << "nLady[1]: "<< game.nLady[1] << endl;
+        cout << game.move_seq.size() <<endl;
         step++;
     }
     game.disp();

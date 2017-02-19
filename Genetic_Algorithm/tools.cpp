@@ -498,6 +498,7 @@ Move Grid::minMax(int player, int depth){
               int x_l = new_ladies[k].x;
               int y_l = new_ladies[k].y;
               set(x_l,y_l,get(x_l,y_l)-2);
+              nLady[player-1]--;
             }
             int points = move.getPoints();
             move.setPoints(mult*points);

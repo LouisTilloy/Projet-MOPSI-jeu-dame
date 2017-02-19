@@ -254,7 +254,8 @@ public:
       vector<Coord> eats = eated(player, move);
       nPieces[2-player] -= eats.size();
       for(int i=0;i<eats.size();i++){
-          if ( get(eats[i].x, eats[i].y) == 2-player + 2 )
+          if ( get(eats[i].x, eats[i].y) == 2-player + 2 ) // if the eated piece is a lady, it decreases the
+                                                           // the number of ladies of the owner of the piece
               nLady[2-player] --;
           set(eats[i].x, eats[i].y, 0);
       }

@@ -53,13 +53,12 @@ void Grid_AI::turnLady(int nPlayer){
     for(int x=0; x<size;x++){
         if (get(x,y) == nPlayer){
             set(x, y, nPlayer+2); // turns the piece into a lady
-            nLady[nPlayer]++; // Add 1 to the number of lady the player has
+            nLady[nPlayer-1]++; // Add 1 to the number of lady the player has
         }
     }
 }
 
 int Grid_AI::points(int player, int minmaxPlayer){
-    return rand()%100;
     //evaluation function of the player who started the minmax
     int piecePoints = nPieces[player-1] - nPieces[2-player];
     int ladyPoints;

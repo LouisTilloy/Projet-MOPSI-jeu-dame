@@ -8,7 +8,7 @@ find_package(Imagine)
 project(IA)
 add_executable(IA
 genetic.cpp
-tools.cpp tools.h
+../tools.cpp ../tools.h
 genetic_tools.cpp genetic_tools.h
 )
 ImagineUseModules(IA Graphics)
