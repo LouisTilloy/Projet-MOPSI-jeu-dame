@@ -2,12 +2,13 @@
 #include <stdlib.h>
 #include <time.h>
 
-const int depth = 3;
-const int poolsize = 10; // Taille de la population
-const int nGenerations = 5; // Nombre de générations
+const int depth = 4;
+const int poolsize = 40; // Taille de la population
+const int nGenerations = 20; // Nombre de générations
+const int nMatches = 4; // Nombre de matchs que fait une IA
 
 
-// Creates a fight between two AI, returns the number of the winning IA
+// Creates a fight between two AI, returns the number of the winning AI
 // or 0 if it's a draw.
 int fight(DNA robot1, DNA robot2){
     double tab1[50], tab2[50];
@@ -107,15 +108,16 @@ int main(){
         // Making AI fight against each other
         for (int i=0; i<poolsize; i++){
             cout <<(i*100)/poolsize<<"%"<<endl;
-            for(int j=0; j<poolsize; j++){
-                int winner = fight(listDNA[i], listDNA[j]);
+            for(int j=0; j<nMatches; j++){
+                int enemy = rand()%poolsize;
+                int winner = fight(listDNA[i], listDNA[enemy]);
                 if (winner == 1){
                     listDNA[i].powerup();
-                    listDNA[j].powerdown();
+                    listDNA[enemy].powerdown();
                 }
                 else if (winner == 2){
                     listDNA[i].powerdown();
-                    listDNA[j].powerup();
+                    listDNA[enemy].powerup();
                 }
             }
         }
