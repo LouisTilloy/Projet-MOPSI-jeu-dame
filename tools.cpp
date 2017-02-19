@@ -570,7 +570,7 @@ Move Grid::minMaxEq(int player, int nodes){
 
 
 
-Move Grid::alphaBeta(int player, int depth, int alpha, bool elag){
+Move Grid::alphaBeta(int player, int depth, int alpha, bool elag, bool again, Coord start){
   Move best_move;
   if(depth==0 || isEnded()){
       best_move.setPoints(points(player));
@@ -578,7 +578,13 @@ Move Grid::alphaBeta(int player, int depth, int alpha, bool elag){
   }
   int beta = -10000;
   bool go_on = true;
-  vector<Coord> playable = playables(player);
+  vector<Coord> playable;
+  if(again){
+    playable.clear();
+    playable.push_back(start);
+  }else{
+    playable = playables(player);
+  }
   for(int i=0;i<playable.size();i++){
       vector<Coord> plays = availablePlays(playable[i]);
       for(int j=0;j<plays.size();j++){
@@ -590,10 +596,10 @@ Move Grid::alphaBeta(int player, int depth, int alpha, bool elag){
           vector<Coord> new_ladies;
           new_ladies.clear();
           if(play_again){
-              move = alphaBeta(player, depth-1, beta, false);
+              move = alphaBeta(player, depth-1, beta, false, false, start);
           }else{
               new_ladies = check_ladies();
-              move = alphaBeta(3-player, depth -1, beta, true);
+              move = alphaBeta(3-player, depth -1, beta, true, false, start);
               mult = -1;
           }
           for(int k=0;k<new_ladies.size();k++){
@@ -610,7 +616,7 @@ Move Grid::alphaBeta(int player, int depth, int alpha, bool elag){
               best_move.end = plays[j];
               best_move.setPoints(beta);
           }
-          if(elag && (-move.getPoints() <=alpha)){
+          if(elag && (-move.getPoints() <= alpha)){
             go_on = false;
             break;
           }
@@ -623,7 +629,7 @@ Move Grid::alphaBeta(int player, int depth, int alpha, bool elag){
 }
 
 
-Move Grid::alphaBetaLimited(int player, int depth, int alpha, bool elag, DWORD stop_time, bool& finished){
+Move Grid::alphaBetaLimited(int player, int depth, int alpha, bool elag, bool again, Coord start, DWORD stop_time, bool& finished){
   finished = true;
   Move best_move;
   if(depth==0 || isEnded()){
@@ -636,7 +642,13 @@ Move Grid::alphaBetaLimited(int player, int depth, int alpha, bool elag, DWORD s
   }
   int beta = -10000;
   bool go_on = true;
-  vector<Coord> playable = playables(player);
+  vector<Coord> playable;
+  if(again){
+    playable.clear();
+    playable.push_back(start);
+  }else{
+    playable = playables(player);
+  }
   for(int i=0;i<playable.size();i++){
       if(GetTickCount()>=stop_time){
           finished = false;
@@ -660,10 +672,10 @@ Move Grid::alphaBetaLimited(int player, int depth, int alpha, bool elag, DWORD s
           vector<Coord> new_ladies;
           new_ladies.clear();
           if(play_again){
-              move = alphaBeta(player, depth-1, beta, false);
+              move = alphaBeta(player, depth-1, beta, false, false, start);
           }else{
               new_ladies = check_ladies();
-              move = alphaBeta(3-player, depth -1, beta, true);
+              move = alphaBeta(3-player, depth -1, beta, true, false, start);
               mult = -1;
           }
           if(GetTickCount()>=stop_time){
@@ -710,14 +722,14 @@ Move Grid::alphaBetaLimited(int player, int depth, int alpha, bool elag, DWORD s
 }
 
 
-Move Grid::bestLimitedAnswer(int player, int given_time){
+Move Grid::bestLimitedAnswer(int player, int given_time, bool again, Coord start){
   DWORD t1, t2;
   t1 = GetTickCount();
   Move bestAnswer;
   t2 = t1 + given_time;
   for(int p=1;p<20;p++){
     bool is_finished = true;
-    Move this_move = alphaBetaLimited(player, p, -10000, false, t2, is_finished);
+    Move this_move = alphaBetaLimited(player, p, -10000, false, again, start, t2, is_finished);
     if(is_finished){
       bestAnswer = this_move;
     }else{

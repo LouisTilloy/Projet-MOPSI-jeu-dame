@@ -16,13 +16,14 @@ int main(int argc, char** argv){
         G.set(3,2,1);
         G.set(4,3,1);
         G.disp();
+        Coord C(1,0);
         string ch = "y";
         while(ch=="y"){
-          Move IA_move = G.bestLimitedAnswer(2, 2000);
+          Move IA_move = G.bestLimitedAnswer(2, 2000, false, C);
           IA_move.disp();
           G.play(1, IA_move);
           G.disp();
-          IA_move = G.bestLimitedAnswer(1, 2000);
+          IA_move = G.bestLimitedAnswer(1, 2000, false, C);
           G.play(2, IA_move);
           G.disp();
           cout<<G.isEnded()<<endl;
@@ -64,8 +65,17 @@ int main(int argc, char** argv){
                 break;
               case 3:
               {
+                Coord start(0,0);
+                bool again;
+                if(argv[5][0]=='N'){
+                  again = false;
+                }else{
+                  again = true;
+                  start.x = argv[5][0] - '0';
+                  start.y = argv[5][1] - '0';
+                }
                 int depth = argv[4][0] - '0';
-                IA_move = G.alphaBeta(2, depth, -10000, false);
+                IA_move = G.alphaBeta(2, depth, -10000, false, again, start);
               }
                 break;
             }

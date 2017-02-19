@@ -6,7 +6,7 @@ import time
 import GameModel
 
 
-DEPTH = 3
+DEPTH = 7
 
 
 class Square(QtGui.QPushButton):
@@ -197,9 +197,10 @@ class Window(QtGui.QWidget):
                 for move in self.checkers.availableMoves(self.selectedPosition):
                     self.buttonList[move].availableSelect()
         self.graphicCheckLady(1)
+        startCoord = None
         while self.checkers.currentPlayer.number == 2:
             self.resetGraphicSelections()
-            move, eats = self.checkers.IA_turn(DEPTH)
+            move, eats = self.checkers.IA_turn(DEPTH, startCoord)
             isLady = self.checkers[move[1]].isLady
             print(move[0], move[1])
             self.buttonList[move[0]].removePiece()
@@ -208,6 +209,8 @@ class Window(QtGui.QWidget):
                 self.buttonList[eat].removePiece()
             if not (len(self.checkers.availableEats(move[1])[0])>0 and len(eats)>0):
                 self.checkers.currentPlayer = self.checkers.player1
+            else:
+                startCoord = move[1]
         self.graphicCheckLady(2)
         self.graphicSelection(1)
         return None

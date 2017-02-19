@@ -358,7 +358,7 @@ class Game(grid.Grid):
                 if self[i, line].player == nPlayer and self[i, line].isLady == False:
                     self[i, line].isLady = True
 
-    def IA_turn(self, depth):
+    def IA_turn(self, depth, startCoord = None):
         """Communication with the c++ programm and playing the move chosen by IA"""
         table = ""
         for i in range(self.size):
@@ -376,7 +376,10 @@ class Game(grid.Grid):
         answer = pipe.communicate()[0].decode('ascii')
         error = pipe.communicate()[1].decode('ascii')"""
         technique = 3
-        process = subprocess.run(["IA.exe", "grid", table, str(technique), str(depth)], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+        startStr = "N"
+        if startCoord != None:
+            startStr = str(startCoord[0])+str(startCoord[1])
+        process = subprocess.run(["IA.exe", "grid", table, str(technique), str(depth), startStr], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
         answer = process.stdout.decode();
         error = process.stderr.decode();
         if(error != ''):
