@@ -13,6 +13,7 @@
 #include <vector>
 #include <string.h>
 #include <time.h>
+#include <windows.h>
 using namespace std;
 
 
@@ -309,6 +310,7 @@ public:
   Move minMax(int player, int depth);
   Move minMaxEq(int player, int nodes);
   Move alphaBeta(int player, int depth, int alpha, bool elag);
+  Move Grid::bestLimitedAnswer(int player, double given_time);
 };
 
 //function that communicate with the python script, telling it what to do

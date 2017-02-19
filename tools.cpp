@@ -623,6 +623,16 @@ Move Grid::alphaBeta(int player, int depth, int alpha, bool elag){
 }
 
 
+Move Grid::bestLimitedAnswer(int player, int given_time){
+  DWORLD t1, t2;
+  t1 = GetTickCount();
+  Move bestAnswer;
+  // pas fini
+  t2 = GetTickCount();
+  return bestAnswer;
+}
+
+
 
 
 

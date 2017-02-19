@@ -7,16 +7,19 @@ int main(int argc, char** argv){
         //Debug
         Grid G(10);
         G.copy();
-        G.set(1,6,3);
         G.disp();
-        Coord initCoord(1,6);
-        Coord endCoord(0,5);
-        Move move(initCoord, endCoord);
-        G.play(1, move);
-        G.disp();
-        Move IA_move = G.alphaBeta(2, 4, -10000, true);
-        G.play(2, IA_move);
-        G.disp();
+        string ch = "y";
+        while(ch=="y"){
+          Move IA_move = G.alphaBeta(1, 7, -10000, true);
+          G.play(1, IA_move);
+          G.disp();
+          IA_move = G.alphaBeta(2, 7, -10000, true);
+          G.play(2, IA_move);
+          G.disp();
+          cout<<"continue?  "<<endl;
+          cin>>ch;
+        }
+
     }else{
         //Commande
         if(strcmp(argv[1], "grid")==0){
