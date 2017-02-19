@@ -6,7 +6,7 @@ import time
 import GameModel
 
 
-DEPTH = 3
+DEPTH = 7
 
 
 class Square(QtGui.QPushButton):
@@ -117,8 +117,6 @@ class Window(QtGui.QWidget):
 
 
     def buttonClicked(self):
-        print("player 1:", self.checkers.player1.nPieces)
-        print("player 2:", self.checkers.player2.nPieces)
         """ Called whenever a button is pressed,
         the method does one turn of the game """
         print("A button has been pressed !")
@@ -198,7 +196,6 @@ class Window(QtGui.QWidget):
             else:
                 for move in self.checkers.availableMoves(self.selectedPosition):
                     self.buttonList[move].availableSelect()
-
         self.graphicCheckLady(1)
         while self.checkers.currentPlayer.number == 2:
             self.resetGraphicSelections()
@@ -213,9 +210,6 @@ class Window(QtGui.QWidget):
                 self.checkers.currentPlayer = self.checkers.player1
         self.graphicCheckLady(2)
         self.graphicSelection(1)
-        
-        if self.checkers.winner():
-            print("Winner: ", self.checkers.players[self.checkers.winner()-1].name)
         return None
 
     def resetGraphicSelections(self):
