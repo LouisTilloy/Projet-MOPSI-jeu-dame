@@ -4,8 +4,8 @@
 
 
 Grid_AI::Grid_AI(int input_size, double a10, double b10, double a20, double b20,
-                 double mobility10, double mobility20, double positions10[50],
-                 double positions20[50]): Grid(input_size){
+                 double mobility10, double mobility20, double border10,
+                 double border20, double center10, double center20): Grid(input_size){
     for (int i=0; i<input_size*input_size; i++)
         tab[i] = 0;
     for (int y=0; y<input_size/2 - 1; y++){
@@ -25,10 +25,38 @@ Grid_AI::Grid_AI(int input_size, double a10, double b10, double a20, double b20,
     lady2 = b20;
     mobility1 = mobility10;
     mobility2 = mobility20;
-    for (int i=0; i<100;i++){
-        positions1[i] = positions10[i];
-        positions2[i] = positions20[i];
+    border1 = border10;
+    border2 = border20;
+    center1 = center10;
+    center2 = center20;
+}
+
+Grid_AI::Grid_AI(int input_size, DNA robot1, DNA robot2): Grid(input_size){
+    for (int i=0; i<input_size*input_size; i++)
+        tab[i] = 0;
+    for (int y=0; y<input_size/2 - 1; y++){
+        for (int x=0; x<input_size/2; x++){
+            //cout<<x*2 + (y+1)%2 + y*input_size<<endl;
+            tab[x*2 + (y+1)%2 + y*input_size] = 2;
+            tab[x*2 + y%2 + (input_size-1-y)*input_size] = 1;
+        }
     }
+    nPieces[0] = 20;
+    nPieces[1] = 20;
+    nLady[0] = 0;
+    nLady[1] = 0;
+
+    // AI's DNA
+    piece1 = robot1.getGene(0);
+    piece2 = robot2.getGene(0);
+    lady1 = robot1.getGene(1);
+    lady2 = robot2.getGene(1);
+    mobility1 = robot1.getGene(2);
+    mobility2 = robot2.getGene(2);
+    border1 = robot1.getGene(3);
+    border2 = robot2.getGene(3);
+    center1 = robot1.getGene(4);
+    center2 = robot2.getGene(4);
 }
 
 Grid_AI::Grid_AI(const Grid_AI &game){
@@ -50,10 +78,10 @@ Grid_AI::Grid_AI(const Grid_AI &game){
     lady2 = game.lady2;
     mobility1 = game.mobility1;
     mobility2 = game.mobility2;
-    for (int i=0; i<50; i++){
-        positions1[i] = game.positions1[i];
-        positions2[i] = game.positions2[i];
-    }
+    border1 = game.border1;
+    border2 = game.border2;
+    center1 = game.center1;
+    center2 = game.center2;
 }
 
 Grid_AI::~Grid_AI(){
@@ -81,12 +109,24 @@ int Grid_AI::points(int player, int minmaxPlayer){
     int piecePoints = nPieces[player-1] - nPieces[2-player];
     int ladyPoints = nLady[player-1] - nLady[2-player];
     int mobility = playables(player).size();
-    double positionning;
-    for (int i=0; i<50; i++){
-        if (minmaxPlayer == 1)
-            positionning = (tab[2*i+1]%2 == player)*positions1[i];
-        if (minmaxPlayer == 2)
-            positionning = (tab[2*i+1]%2 == player)*positions2[i];
+    double positionning = 0;
+    for (int x=0; x<10; x++){
+        for(int y=0; y<10; y++){
+            if (tab[x+y*size] != 0 && tab[x+y*size] != 5){
+                if (x == 0 || y == 0 || x == size-1 || y == size-1){
+                    if (minmaxPlayer == 1)
+                        positionning += (tab[x+y*size]%2 == player)*border1;
+                    if (minmaxPlayer == 2)
+                        positionning += (tab[x+y*size]%2 == player)*border2;
+                }
+                else{
+                    if (minmaxPlayer == 1)
+                        positionning += (tab[x+y*size]%2 == player)*center1;
+                    if (minmaxPlayer == 2)
+                        positionning += (tab[x+y*size]%2 == player)*center2;
+                }
+            }
+        }
     }
 
     double value;

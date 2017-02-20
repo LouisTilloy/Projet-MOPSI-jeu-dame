@@ -5,21 +5,13 @@
 const int depth = 4;
 const int poolsize = 40; // Taille de la population
 const int nGenerations = 20; // Nombre de générations
-const int nMatches = 4; // Nombre de matchs que fait une IA
+const int nMatches = 6; // Nombre de matchs que fait une IA
 
 
 // Creates a fight between two AI, returns the number of the winning AI
 // or 0 if it's a draw.
 int fight(DNA robot1, DNA robot2){
-    double tab1[50], tab2[50];
-    for (int i=0; i<50; i++){
-        tab1[i] = robot1.getGene(3+i);
-        tab2[i] = robot2.getGene(3+i);
-    }
-    Grid_AI game = Grid_AI(10,robot1.getGene(0), robot1.getGene(1),
-                           robot2.getGene(0), robot2.getGene(1),
-                           robot1.getGene(2), robot2.getGene(2),
-                           tab1, tab2);
+    Grid_AI game = Grid_AI(10, robot1, robot2);
     int nPlayer = 1;
     for (int step=0; step<200; step++){
         //Move move = game.minMax(nPlayer, nPlayer, depth);
@@ -141,7 +133,7 @@ int main(){
          << "Gene 2:" << listDNA[0].getGene(1) << endl
          << "Gene 3:" << listDNA[0].getGene(2) << endl;
     cout << "***********Poids des cases***************" << endl;
-
+    /*
     for(int y=0; y<10;y++){
         cout << "-----------------------------------------------" <<endl;
         for(int x=0; x<10; x++){
@@ -153,7 +145,7 @@ int main(){
         cout << "|" <<endl;
     }
     cout << "-----------------------------------------------"<<endl;
-
+    */
 
     return 0;
 }

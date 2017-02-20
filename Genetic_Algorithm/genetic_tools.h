@@ -14,28 +14,7 @@ using namespace std;
 // 4: player 2 lady
 // 5: square is outsitde the grid
 
-const int n_genes = 53;
-
-class Grid_AI: public Grid{
-public:
-    double piece1, lady1, piece2, lady2; // Coeficients giving the importance of the criteria
-              // nLady[nPlayer-1]-nLady[2-nPlayer] and
-              // the criteria nPiece[nPlayer-1]-nPiece[2-nPlayer]
-    double mobility1, mobility2; // coeficient giving the importance of the number of possible play
-    double positions1[50], positions2[50]; // coeficients giving the importance of the position
-    Grid_AI(int input_size, double a10, double b10, double a20, double b20,
-            double mobility10, double mobility20, double positions10[50],
-            double positions20[50]);
-    Grid_AI(const Grid_AI &game);
-    ~Grid_AI();
-    void turnLady(int nPlayer);
-    // Overloading function points
-    int points(int player, int minmaxPlayer);
-    // Overloading minmax function
-    Move minMax(int player, int minmaxPlayer, int depth);
-    // Overloading alpha beta function
-    Move alphaBeta(int player, int minmaxPlayer, int depth, int alpha, bool elag);
-};
+const int n_genes = 5;
 
 class DNA{
     vector<double> genes;
@@ -50,6 +29,30 @@ public:
     double getGene(int i);
     int getPower();
 };
+
+class Grid_AI: public Grid{
+public:
+    double piece1, lady1, piece2, lady2; // Coeficients giving the importance of the criteria
+              // nLady[nPlayer-1]-nLady[2-nPlayer] and
+              // the criteria nPiece[nPlayer-1]-nPiece[2-nPlayer]
+    double mobility1, mobility2; // coeficient giving the importance of the number of possible play
+    double border1, center1, border2, center2; // coeficients giving the importance of the position
+    Grid_AI(int input_size, double a10, double b10, double a20, double b20,
+            double mobility10, double mobility20, double border10,
+            double border20, double center10, double center20);
+    Grid_AI(const Grid_AI &game);
+    Grid_AI(int input_size, DNA robot1, DNA robot2);
+    ~Grid_AI();
+    void turnLady(int nPlayer);
+    // Overloading function points
+    int points(int player, int minmaxPlayer);
+    // Overloading minmax function
+    Move minMax(int player, int minmaxPlayer, int depth);
+    // Overloading alpha beta function
+    Move alphaBeta(int player, int minmaxPlayer, int depth, int alpha, bool elag);
+};
+
+
 
 
 
